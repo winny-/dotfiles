@@ -1,0 +1,37 @@
+#+startup: indent
+* winny's dotfiles
+
+Not much to see here yet. I link stuff in with:
+
+#+BEGIN_SRC sh
+stow -v -S -d modules/MODNAME -t $HOME --no-folding image
+#+END_SRC
+
+
+** See also
+
+- [[https://github.com/winny-/configs][My old configs repository]]
+- [[https://gitlab.com/winny-gentoo-ops][My Gentoo configs]]
+
+** Extension ideas
+
+*** Add pre/post-link and pre/post-unlink hooks
+
+Useful for fixing permissions (e.g. =.ssh= should be =0700=). Useful
+for templated files. Useful for creating/deleting host-specific files.
+
+** Folder structure
+
+- modules/ :: the modularized configs. Each module is a directory.
+
+
+** Module structure
+
+- image/ :: the files to symlink into the homedir.
+- hooks/ :: TODO. should contain =prelink=, =postlink=, =preunlink=,
+            =postunlink=.
+
+** License
+
+MIT/X. See [[file:LICENSE][LICENSE]].
+
