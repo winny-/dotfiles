@@ -1,0 +1,6 @@
+# Example platform.conf
+# -*- mode: conf-unix; -*- 
+ao=jack,pulse,alsa              # Set audio output.
+jack-port=Media                 # Set jack port.
+audio-channels=stereo           # Set audio channels
+ytdl-format="bestvideo[height<=?1080]+bestaudio/best" # Restrict video size.
