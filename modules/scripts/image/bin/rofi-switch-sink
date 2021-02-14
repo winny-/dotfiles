@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -eu
+
+newSink="$(pactl list sinks short | cut -f2 | rofi -dmenu)"
+switch-sink "$newSink"
