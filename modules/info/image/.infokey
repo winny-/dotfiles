@@ -1,0 +1,6 @@
+# -*- mode: conf; -*-
+# Set GNU info colors.  See `info "(info-stnd) Colors and Styles"'.
+#var
+link-style=underline,yellow
+active-link-style=underline,yellow,bold
+match-style=bgred,bold
