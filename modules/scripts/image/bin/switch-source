@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+# Based off of https://unix.stackexchange.com/a/67398/59894
+
+set -eu
+
+if [[ $# -lt 1 ]]; then
+    echo "Usage: $0 <sourceId/sourceName>" >&2
+    echo "Valid sources:" >&2
+    pactl list short sources | column -t >&2
+    exit 1
+fi
+
+newSource="$1"
+
+pactl set-default-source "$newSource"
+
+pactl list short source-outputs|while read -r stream; do
+    streamId="$(echo "$stream"|cut '-d ' -f1)"
+    echo "moving stream $streamId"
+    pactl move-source-output "$streamId" "$newSource"
+done
