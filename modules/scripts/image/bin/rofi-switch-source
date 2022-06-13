@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 set -eu
 
-newSource="$(pactl list sources short | cut -f2 | rofi -dmenu)"
+newSource="$(pactl list sources short | cut -f2 | grep -v '\.monitor$' | rofi -dmenu)"
 switch-source "$newSource"
