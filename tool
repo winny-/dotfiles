@@ -10,7 +10,6 @@ cd "${0%/*}"  # Project root.
 cmd_install() {
 	[[ $# -eq 0 ]] && cmd_usage
 	for mod in "$@"; do
-		# TODO ensure stow is ran from correct directory (project root).
 		mod="${mod#modules/}"  # Allow omitting the full path
 		stow -vv -S -d "modules/$mod" -t "$HOME" --no-folding image
 	done
