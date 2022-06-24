@@ -3,7 +3,7 @@
 set -eu -o pipefail
 
 progname="${0##*/}"
-cd "${0%/*"  # Project root.
+cd "${0%/*}"  # Project root.
 
 # TODO getopts
 
