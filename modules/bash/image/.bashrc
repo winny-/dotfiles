@@ -4,11 +4,16 @@
 # that's a great idea, given how ridiculously busy shell startup files
 # get.
 
+# XXX Maybe hack? XXX
+#
+# Ensure keychain is loaded for non-interactive scripts or ssh jump
+# hosts.
+command -v keychain >/dev/null && eval $(keychain --quiet --eval)
+# XXX End XXX
+
 ###################################################
 # This should be the first thing ran in the bashrc
 ###################################################
-
-
 if [[ $- != *i* ]] ; then
 	# Shell is non-interactive.  Be done now!
 	return
