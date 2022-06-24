@@ -4,9 +4,14 @@
 Not much to see here yet. I link stuff in with:
 
 #+BEGIN_SRC sh
-stow -v -S -d modules/MODNAME -t $HOME --no-folding image
+  ./tool install MODNAME
 #+END_SRC
 
+Or if you're feeling ballsy you can link everything at once:
+
+#+BEGIN_SRC sh
+  ./tool install modules/*
+#+END_SRC
 
 ** See also
 
@@ -24,7 +29,6 @@ for templated files. Useful for creating/deleting host-specific files.
 
 - modules/ :: the modularized configs. Each module is a directory.
 
-
 ** Module structure
 
 - image/ :: the files to symlink into the homedir.
@@ -34,4 +38,3 @@ for templated files. Useful for creating/deleting host-specific files.
 ** License
 
 MIT/X. See [[file:LICENSE][LICENSE]].
-
