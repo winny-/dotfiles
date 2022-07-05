@@ -1,6 +1,8 @@
 xft*antialias: true
 
+! Not sure how to set systemwide yet...
 Xcursor.size: 32
+Xcursor.theme: Adwaita
 
 ! xterm stuff
 xterm*metaSendsEscape: true
