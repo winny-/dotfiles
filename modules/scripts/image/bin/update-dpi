@@ -93,7 +93,7 @@ END
               (hash-ref resolved CURSOR-SIZE))))
     #:exists 'truncate)
 
-  (command "xrdb -merge ~/.cache/dpi.Xresources")
+  (command (format "xrdb -merge ~a" (path->string p)))
 
   (printf "export QT_SCALE_FACTOR=~a\n"
           (hash-ref resolved QT-SCALE-FACTOR)))
