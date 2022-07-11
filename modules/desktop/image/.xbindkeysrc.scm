@@ -55,10 +55,10 @@
        ;; brightness was greater than 1) or 0 (if brightness was 1).
        (write-brightness (max (- brightness step)
                               (if (> brightness 1) 1 0)))))
-    (xbindkey-function '(XF86MonBrightnessDown) decrease-brightness)
-    (xbindkey-function '(XF86MonBrightnessUp) increase-brightness)
-    (xbindkey-function '(Shift XF86MonBrightnessDown) (lambda () (decrease-brightness (* BACKLIGHT-STEP 4))))
-    (xbindkey-function '(Shift XF86MonBrightnessUp) (lambda ()  (increase-brightness (* BACKLIGHT-STEP 4))))))
+    (xbindkey-function '(XF86MonBrightnessDown) (lambda () (decrease-brightness (* BACKLIGHT-STEP 4))))
+    (xbindkey-function '(XF86MonBrightnessUp) (lambda ()  (increase-brightness (* BACKLIGHT-STEP 4))))
+    (xbindkey-function '(Shift XF86MonBrightnessDown) decrease-brightness)
+    (xbindkey-function '(Shift XF86MonBrightnessUp) increase-brightness)))
 
 (xbindkey '(Mod4 k) "dunstctl close-all")
 (xbindkey '(Mod4 Shift k) "dunstctl context")
@@ -100,7 +100,6 @@
 ;; (xbindkey '(Mod4 Shift q) "sh -c 'zenity --question --text \"Log off $USER?\" && pkill dwm'")
 (xbindkey '(Mod4 F3) "rofi-pass")
 (xbindkey '(Mod4 F2) "toggle-redshift")
-(xbindkey '(Mod4 F8) (path-join HOME ".screenlayout/rotate.rkt"))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; bspwm bindings
 (use-modules (ice-9 format))

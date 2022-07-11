@@ -25,6 +25,7 @@ How to install deps:
 (define (command incantation)
   (match-define (list out in pid err proc)
     (process incantation))
+  (close-output-port in)
   out)
 
 (define (compute-dpi state)
