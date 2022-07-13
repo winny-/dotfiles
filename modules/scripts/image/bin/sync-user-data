@@ -40,11 +40,11 @@ This synchronizes much of my user settings/data etc between machines.  Examples:
   (parameterize ([foreground-color 'green])
     (color-displayln (apply format s args))))
 
-(define ($ command . args)
+(define ($ . command)
   (call-with-output-string
    (λ (output)
      (apply run-subprocess-pipeline
-            command args
+            command
             #:in null-redirect
             #:out output
             #:err stdout-redirect))))
@@ -77,7 +77,7 @@ This synchronizes much of my user settings/data etc between machines.  Examples:
         (list repo
                               (with-directory path
                                 (string-append
-                                 ($ '(git pull))
+                                 ($ '(git pull -n))
                                  ($ '(git push)))))))))
   (for ([task tasks])
     (match-define (list repo output)
@@ -89,9 +89,19 @@ This synchronizes much of my user settings/data etc between machines.  Examples:
   (printfn "> unison")
   ($ '(unison home)))
 
+(define *is-home?* (make-parameter #f))
+
+(define (main)
+  (do-repos)
+  (unless (*is-home?*)
+    (do-unison))
+   (void))
+
 (module+ main
   (command-line
+   #:once-each
+   (("-H" "--home")
+    "You are the home primary storage, so you do not need to run unison."
+    (*is-home?* #t))
    #:args ()
-   (do-repos)
-   (do-unison)
-   (void))) ; Nothing for top level to print for this expression.
+   (main))) ; Nothing for top level to print for this expression.
