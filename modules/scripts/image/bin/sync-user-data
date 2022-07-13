@@ -23,26 +23,40 @@ This synchronizes much of my user settings/data etc between machines.  Examples:
 (require racket/pretty
          racket/hash
          racket/os
+         racket/logging
 
          basedir
          dirname
          shell/pipeline
          ansi-color)
 
+(define-logger app)
+
 (current-basedir-program-name "sync-user-data")
 
 (define repos '(.password-store
                 .emacs.d
+                .config/awesome
                 p/dotfiles
                 p/nixos-configs))
-
-(define (printfn s . args)
-  (parameterize ([foreground-color 'green])
-    (color-displayln (apply format s args))))
 
 (define ($ . command)
   (call-with-output-string
    (λ (output)
+     (log-app-debug
+      "$ ~a"
+      ;; Build a shell-like representation of the pipeline.
+      (string-join
+       (map (λ (subcommand)
+              (string-join
+               (map (λ (arg)
+                      (if (string-contains? (~a arg) " ")
+                          (format "'~a'" arg)
+                          (~a arg)))
+                    subcommand)
+               " "))
+            command)
+       " | "))
      (apply run-subprocess-pipeline
             command
             #:in null-redirect
@@ -75,33 +89,65 @@ This synchronizes much of my user settings/data etc between machines.  Examples:
        (thunk
         (define path (~ repo))
         (list repo
-                              (with-directory path
-                                (string-append
-                                 ($ '(git pull -n))
-                                 ($ '(git push)))))))))
+              (with-directory path
+                (string-append
+                 ($ '(git pull -n))
+                 ($ '(git push)))))))))
   (for ([task tasks])
     (match-define (list repo output)
       (await task))
-    (printfn "> repo: ~a" repo)
-    (display output)))
+    (log-app-info "> repo: ~a" repo)
+    (log-app-info output)))
 
 (define (do-unison)
-  (printfn "> unison")
-  ($ '(unison home)))
+  (log-app-info "> unison")
+  ($ (append '(unison home)
+             (flatten (for/list ([r repos])
+                        `(-ignore ,(format "Path ~a" r)))))))
 
 (define *is-home?* (make-parameter #f))
+(define *verbosity* (make-parameter #f))
 
 (define (main)
   (do-repos)
   (unless (*is-home?*)
     (do-unison))
-   (void))
+  (void)) ; Nothing for top level to print for this expression.
 
 (module+ main
   (command-line
+   #:multi
+   (("-v" "--verbose")
+    "Verbosity."
+    (*verbosity* #t))
    #:once-each
    (("-H" "--home")
     "You are the home primary storage, so you do not need to run unison."
     (*is-home?* #t))
    #:args ()
-   (main))) ; Nothing for top level to print for this expression.
+
+   (define (clean message)
+     (string-trim (regexp-replace #rx"^[^:]+: " message "")
+                  #:left? #f
+                  #:repeat? #t))
+   (define/match (log-it message)
+     [((vector (and level (or 'fatal 'error 'warning)) message _ ...))
+      (parameterize ([foreground-color 'red])
+        (color-displayln (format "~a: ~a"
+                                 (string-titlecase (~a level))
+                                 (clean message))))]
+     [((vector 'info message _ ...))
+      (define m (clean message))
+      (if (string-prefix? m ">")
+          (parameterize ([foreground-color 'green])
+            (color-displayln m))
+          (displayln m))]
+     [((vector 'debug message _ ...))
+      (parameterize ([foreground-color 'yellow])
+        (color-displayln (clean message)))]
+     [(v) (raise-argument-error 'log-it "Don't know what to do with unmatched value ~a" v)])
+   (with-intercepted-logging
+     log-it
+     main
+     (if (*verbosity*) 'debug 'info)
+     #:logger app-logger)))
