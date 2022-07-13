@@ -1,0 +1,97 @@
+#!/usr/bin/env racket
+#|
+
+# How to install deps
+
+```
+raco pkg install --auto dirname basedir shell-pipeline ansi-color
+```
+
+# What does this script do?
+
+This synchronizes much of my user settings/data etc between machines.  Examples:
+
+- Password database (can be done in place)
+- Emacs configuration (requires Emacs restart)
+- dotfiles (still needs manual intervention, run:
+`~/p/dotfiles/tool install ~/p/dotfiles/tool modules/*`)
+- Any user documents and work files (e.g. your code projects, psd files, whatever)
+
+|#
+#lang racket
+
+(require racket/pretty
+         racket/hash
+         racket/os
+
+         basedir
+         dirname
+         shell/pipeline
+         ansi-color)
+
+(current-basedir-program-name "sync-user-data")
+
+(define repos '(.password-store
+                .emacs.d
+                p/dotfiles
+                p/nixos-configs))
+
+(define (printfn s . args)
+  (parameterize ([foreground-color 'green])
+    (color-displayln (apply format s args))))
+
+(define ($ command . args)
+  (call-with-output-string
+   (λ (output)
+     (apply run-subprocess-pipeline
+            command args
+            #:in null-redirect
+            #:out output
+            #:err stdout-redirect))))
+(define (~ . elems)
+  (apply build-path (expand-user-path "~") (map ~a elems)))
+
+(define-syntax-rule (with-directory dir body ...)
+  (parameterize ([current-directory dir])
+    body ...))
+
+(struct Task (thread channel))
+(define/contract (async proc)
+  (-> procedure? Task?)
+  (define channel (make-channel))
+  (define task (thread
+                (thunk
+                 (channel-put channel (proc)))))
+  (Task task channel))
+(define (await task)
+  (match task
+    [(struct* Task ([channel channel]))
+     (channel-get channel)]))
+
+(define (do-repos)
+  (define tasks
+    (for/list ([repo repos])
+      (async
+       (thunk
+        (define path (~ repo))
+        (list repo
+                              (with-directory path
+                                (string-append
+                                 ($ '(git pull))
+                                 ($ '(git push)))))))))
+  (for ([task tasks])
+    (match-define (list repo output)
+      (await task))
+    (printfn "> repo: ~a" repo)
+    (display output)))
+
+(define (do-unison)
+  (printfn "> unison")
+  ($ '(unison home)))
+
+(module+ main
+  (command-line
+   #:args ()
+   (do-repos)
+   (do-unison)
+   (void))) ; Nothing for top level to print for this expression.
