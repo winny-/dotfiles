@@ -1,3 +1,6 @@
+(use-modules (ice-9 format))
+(use-modules (ice-9 threads))
+
 (define DEBUG #f)
 
 (define (path-join . args) (string-join args "/"))
@@ -11,6 +14,38 @@
 (define lower-volume-a-lot "ponymix decrease 5")
 (define mute "ponymix toggle")
 
+(define-syntax nofail
+  (syntax-rules ()
+    ((_ body ...) (catch #t (lambda () body ...) (lambda _ #f)))))
+
+(define orig-format format)
+(define (format s . args)
+  (apply orig-format #f s args))
+
+(define (trace what expr)
+  (when DEBUG
+    (display (format "TRACE ~a: ~a\n" what expr)))
+  expr)
+
+(define (bind-brightness-control big-increment big-decrement small-increment small-decrement)
+  (define mutex (make-mutex))
+  ;; Try to lock or give up right away.
+  (define (with-critical func)
+    (lambda ()
+      (when (try-mutex mutex)
+        (func)
+        (unlock-mutex mutex))))
+  (for-each
+   (lambda (keys)
+     (define down (car keys))
+     (define up (cadr keys))
+     (xbindkey-function up (with-critical big-increment))
+     (xbindkey-function down (with-critical big-decrement))
+     (xbindkey-function (cons 'Shift up) (with-critical small-increment))
+     (xbindkey-function (cons 'Shift down) (with-critical small-decrement)))
+   '(((XF86MonBrightnessDown) (XF86MonBrightnessUp))
+     ((Mod4 F5) (Mod4 F6)))))
+
 ;; Quick and easy intel backlight adjustment. Does not call
 ;; external scripts so it's always fast.
 
@@ -20,18 +55,12 @@
 ;; SUBSYSTEM=="backlight", ACTION=="change", ENV{TRIGGER}!="none", RUN+="/bin/chgrp -R video /sys%p", RUN+="/bin/chmod -R g=u /sys%p"
 ;;
 ;; (And ensure your user is in the video group.)
-
-(define-syntax nofail
-  (syntax-rules ()
-    ((_ body ...) (catch #t (lambda () body ...) (lambda _ #f)))))
-
-(define (trace what expr)
-  (when DEBUG
-    (display (format "TRACE ~a: ~a\n" what expr)))
-  expr)
-
+;;
+;; Or, use ddcontrol to control your monitor's brightness...
 (define BACKLIGHT-BASE "/sys/class/backlight/intel_backlight")
-(when (access? (path-join BACKLIGHT-BASE "brightness") W_OK)
+(cond
+ ((access? (path-join BACKLIGHT-BASE "brightness") W_OK)
+  (display (format "Setting up keybinds for backlight class device.\n"))
   (let ()
     (define BACKLIGHT-MAX (call-with-input-file (path-join BACKLIGHT-BASE "max_brightness") read))
     (define BACKLIGHT-STEP (quotient BACKLIGHT-MAX 35))
@@ -55,10 +84,22 @@
        ;; brightness was greater than 1) or 0 (if brightness was 1).
        (write-brightness (max (- brightness step)
                               (if (> brightness 1) 1 0)))))
-    (xbindkey-function '(XF86MonBrightnessDown) (lambda () (decrease-brightness (* BACKLIGHT-STEP 4))))
-    (xbindkey-function '(XF86MonBrightnessUp) (lambda ()  (increase-brightness (* BACKLIGHT-STEP 4))))
-    (xbindkey-function '(Shift XF86MonBrightnessDown) decrease-brightness)
-    (xbindkey-function '(Shift XF86MonBrightnessUp) increase-brightness)))
+    (bind-brightness-control
+     (lambda () (increase-brightness (* BACKLIGHT-STEP 4)))
+     (lambda () (decrease-brightness (* BACKLIGHT-STEP 4)))
+     increase-brightness
+     decrease-brightness)))
+ (else
+  (display (format "Setting up keybinds for DDC monitor brightness control.\n"))
+  (let ()
+    ;; XXX This works on stargate, dunno of other machines.
+    (define (adjust-brightness amount)
+      (system (format "ddccontrol -r 0x10 -W ~a dev:/dev/i2c-10" amount amount)))
+    (bind-brightness-control
+     (lambda () (adjust-brightness 10))
+     (lambda () (adjust-brightness -10))
+     (lambda () (adjust-brightness 1))
+     (lambda () (adjust-brightness -1))))))
 
 (xbindkey '(Mod4 k) "dunstctl close-all")
 (xbindkey '(Mod4 Shift k) "dunstctl context")
@@ -88,8 +129,8 @@
 (xbindkey '(Mod4 F8) (mpvc "toggle"))
 (xbindkey '(Mod4 F9) (mpvc "next"))
 (xbindkey '(Mod4 F7) (mpvc "prev"))
-;(xbindkey '(Mod4 c) "lock")
-;(xbindkey '(Mod4 Mod1 Shift c) "nap")
+                                        ;(xbindkey '(Mod4 c) "lock")
+                                        ;(xbindkey '(Mod4 Mod1 Shift c) "nap")
 (xbindkey '(Mod4 F1) "toggle-dvorak")
 (xbindkey '(Mod4 grave) "raise-or-create-emacs")
 (xbindkey '(Mod4 semicolon) "emacsclient -c")
@@ -102,7 +143,6 @@
 (xbindkey '(Mod4 F2) "toggle-redshift")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; bspwm bindings
-(use-modules (ice-9 format))
 (define-syntax xbindkey/group
   (syntax-rules ()
     ((_ common-binding common-command (differences differences* ...))
@@ -125,7 +165,7 @@
 ;; Reload xbindkeys config
 (xbindkey '(Mod4 Shift backslash) "pkill -SIGHUP xbindkeys")
 ;; Spawn terminal
-;(xbindkey '(Mod4 Return) "walacritty")
+                                        ;(xbindkey '(Mod4 Return) "walacritty")
 ;; Run program
 (xbindkey '(Mod4 u) "rofi -show run")
 (xbindkey '(Mod4 w) "rofi -show window")
