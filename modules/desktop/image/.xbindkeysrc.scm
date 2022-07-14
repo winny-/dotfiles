@@ -14,13 +14,19 @@
 (define lower-volume-a-lot "ponymix decrease 5")
 (define mute "ponymix toggle")
 
-(define-syntax nofail
-  (syntax-rules ()
-    ((_ body ...) (catch #t (lambda () body ...) (lambda _ #f)))))
-
 (define orig-format format)
 (define (format s . args)
   (apply orig-format #f s args))
+
+(define-syntax nofail
+  (syntax-rules ()
+    ((_ body ...)
+     (catch #t
+            (lambda () body ...)
+            (lambda args
+              (display (format "nofail caught: ~a\n" args))
+              #f)))))
+
 
 (define (trace what expr)
   (when DEBUG
@@ -94,7 +100,8 @@
   (let ()
     ;; XXX This works on stargate, dunno of other machines.
     (define (adjust-brightness amount)
-      (system (format "ddccontrol -r 0x10 -W ~a dev:/dev/i2c-10" amount amount)))
+      (nofail
+       (system (format "ddccontrol -r 0x10 -W ~a dev:/dev/i2c-10" amount amount))))
     (bind-brightness-control
      (lambda () (adjust-brightness 10))
      (lambda () (adjust-brightness -10))
