@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+set -eu -o pipefail
+
+progname="${0##*/}"
+
+
+cleanup() {
+    [[ ${dir+present} ]] && rm -rf "$dir"
+}
+
+cmd_default() {
+    [[ $# -ne 2 ]] && cmd_usage
+    secrets_dir="$1"
+    borgmatic_cfg="$2"
+    umask 077
+    dir=$(mktemp -t -d recovery-archive.XXXXXXXXXXXXXXXX)
+    trap cleanup EXIT
+    fragment="recovery-archive.$(date -Iseconds)"
+    archdir="$dir/$fragment"
+    tarball="$dir/$fragment.tgz"
+    mkdir "$archdir"
+    rsync -L -r "$secrets_dir/" "$archdir/secrets"
+    rsync -L "$borgmatic_cfg" "$archdir/borgmatic.yaml"
+    tar -cz -C "$dir" -f "$tarball" -- "$fragment"
+    pwgen 40 1 > "$dir/passphrase"
+    gpg --symmetric --batch --yes --passphrase-file "$dir/passphrase" "$tarball"
+    mv -n "$tarball.gpg" /tmp/
+    printf '%s\n' "/tmp/${tarball##*/}.gpg"
+    cat "$dir/passphrase"
+}
+
+
+
+cmd_usage() {
+    printf 'Usage: %s secrets-dir borgmatic-cfg
+' \
+	   "$progname"
+    case $* in
+	help) exit 0 ;;
+	*) exit 1 ;;
+    esac
+}
+
+[[ $# -ne 2 ]] && cmd_usage "$@"
+
+cmd_default "$@"
