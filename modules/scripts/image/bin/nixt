@@ -1,0 +1,83 @@
+#!/usr/bin/env racket
+#lang racket
+
+(require racket/pretty
+         racket/hash
+         racket/os
+         racket/logging
+
+         basedir
+         dirname
+         shell/pipeline
+         ansi-color)
+
+(define-logger app)
+
+(current-basedir-program-name "nixt")
+
+(define ($ #:input [input-port #f]
+           #:output [output-port (current-output-port)]
+           #:error [error-port (current-error-port)]
+           . commands)
+  (call-with-output-string
+   (λ (output)
+     (log-app-debug
+      "$ ~a"
+      ;; Build a shell-like representation of the pipeline.
+      (string-join
+       (map (λ (subcommand)
+              (string-join
+               (map (λ (arg)
+                      (if (string-contains? (~a arg) " ")
+                          (format "'~a'" arg)
+                          (~a arg)))
+                    subcommand)
+               " "))
+            commands)
+       " | "))
+     (apply run-subprocess-pipeline
+            commands
+            #:in (or input-port null-redirect)
+            #:out output-port
+            #:err (or error-port stdout-redirect)))))
+(define (~ . elems)
+  (apply build-path (expand-user-path "~") (map ~a elems)))
+(define-syntax-rule (err fmt args ...)
+  (begin
+    (log-app-fatal fmt args ...)
+    (exit 1)))
+(define-syntax-rule (warn fmt args ...)
+  (begin
+    (log-app-error fmt args ...)))
+
+(define-syntax-rule (with-directory dir body ...)
+  (parameterize ([current-directory dir])
+    body ...))
+
+(define (main subcommand args)
+  (log-app-info "subcommand=~v args=~v" subcommand args)
+  (match subcommand
+    ["provides"
+     (define param (car args))
+     (define path (or ; One of:
+                   (file-exists? param)
+                   (find-executable-path param)))
+     (unless path 
+       (err "\"~a\" is not a file nor does it not match a program in $PATH." param))
+     ($ `(nix-store --query --outputs ,path))]
+    ["rebuild" ($ '(sudo nixos-rebuild switch))]
+    ["upgrade" ($ '(sudo nixos-rebuild switch --upgrade))]))
+
+(define *log-level* (make-parameter 'error))
+
+(module+ main
+  (command-line
+   #:multi
+   [("-v" "--verbose") "Verbose" (*log-level* 'info)]
+   [("-d" "--debug") "Debug" (*log-level* 'debug)]
+   #:args (subcommand . args)
+   (void (with-logging-to-port
+           (current-error-port)
+           (thunk (main subcommand args))
+           #:logger app-logger
+           (*log-level*)))))
