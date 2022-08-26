@@ -62,11 +62,22 @@
      (define path (or ; One of:
                    (file-exists? param)
                    (find-executable-path param)))
-     (unless path 
+     (unless path
        (err "\"~a\" is not a file nor does it not match a program in $PATH." param))
      ($ `(nix-store --query --outputs ,path))]
     ["rebuild" ($ '(sudo nixos-rebuild switch))]
-    ["upgrade" ($ '(sudo nixos-rebuild switch --upgrade))]))
+    ["upgrade" ($ '(sudo nixos-rebuild switch --upgrade))]
+    ["search" ($ `(nix search nixpkgs ,@args))]
+    ["help"
+     (displayln
+      #<<EOF
+provides FILE  - what package provides this file (or program)
+rebuild        - update system to reflect configuration files
+upgrade        - do the above AND upgrade installed packages
+search PACKAGE - find packages
+help           - this message
+EOF
+      )]))
 
 (define *log-level* (make-parameter 'error))
 
