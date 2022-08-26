@@ -15,31 +15,47 @@
 
 (current-basedir-program-name "nixt")
 
+(define (commands->string commands)
+  (string-join
+   (for/list ([command commands])
+     (string-join
+      (for/list ([arg command])
+        (define s (~a arg))
+        (if (string-contains? s " ")
+            (format "'~a'" s)
+            s))
+      " "))
+   " | "))
 (define ($ #:input [input-port #f]
            #:output [output-port (current-output-port)]
            #:error [error-port (current-error-port)]
            . commands)
-  (call-with-output-string
-   (λ (output)
-     (log-app-debug
-      "$ ~a"
-      ;; Build a shell-like representation of the pipeline.
-      (string-join
-       (map (λ (subcommand)
-              (string-join
-               (map (λ (arg)
-                      (if (string-contains? (~a arg) " ")
-                          (format "'~a'" arg)
-                          (~a arg)))
-                    subcommand)
-               " "))
-            commands)
-       " | "))
-     (apply run-subprocess-pipeline
-            commands
-            #:in (or input-port null-redirect)
-            #:out output-port
-            #:err (or error-port stdout-redirect)))))
+  (log-app-debug
+   "$ ~a"
+   ;; Build a shell-like representation of the pipeline.
+   (commands->string commands))
+  (define pipeline
+    (apply run-subprocess-pipeline
+           commands
+           #:in (or input-port null-redirect)
+           #:out output-port
+           #:err (or error-port stdout-redirect)))
+  (define statuses (pipeline-status/list pipeline))
+  (match (filter (negate zero?) statuses)
+    [(list) (void)]
+    [(list _ ... )
+     (err "command \"~a\" failed with ~a"
+          (commands->string commands)
+          (match statuses
+            [(list code) code]
+            [many many]))]))
+(define ($/string . commands)
+  (define out (open-output-string))
+  (apply $ commands #:output out #:error (current-error-port))
+  (begin0
+      (string-trim (get-output-string out))
+    (close-output-port out)))
+
 (define (~ . elems)
   (apply build-path (expand-user-path "~") (map ~a elems)))
 (define-syntax-rule (err fmt args ...)
@@ -68,6 +84,23 @@
     ["rebuild" ($ '(sudo nixos-rebuild switch))]
     ["upgrade" ($ '(sudo nixos-rebuild switch --upgrade))]
     ["search" ($ `(nix search nixpkgs ,@args))]
+    ["repl" ($ '(nix repl <nixpkgs>) #:input (current-input-port))]
+    ["src"
+     (define package (car args))
+     (define output-dir
+       (build-path
+        (make-temporary-directory "nixt-src-~a" #:base-dir "/tmp")
+        (format "~a-~a"
+                package
+                ;; Version:
+                ($/string `(nix eval --raw ,(format "nixpkgs#~a.version" package))))))
+     (match ($/string `(nix-build <nixpkgs> -A ,(format "~a.src" package)))
+       [(? directory-exists? src-dir)
+        (copy-directory/files src-dir output-dir)]
+       [(? file-exists? archive)
+        (make-directory output-dir)
+        ($ `(tar --strip-components=1 -C ,output-dir -xf ,archive))])
+     (displayln (path->string output-dir))]
     ["help"
      (displayln
       #<<EOF
