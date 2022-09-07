@@ -81,8 +81,8 @@
      (unless path
        (err "\"~a\" is not a file nor does it not match a program in $PATH." param))
      ($ `(nix-store --query --outputs ,path))]
-    ["rebuild" ($ '(sudo nixos-rebuild switch))]
-    ["upgrade" ($ '(sudo nixos-rebuild switch --upgrade))]
+    ["rebuild" ($ '(sudo nixos-rebuild switch --show-trace))]
+    ["upgrade" ($ '(sudo nixos-rebuild switch --upgrade --show-trace))]
     ["search" ($ `(nix search nixpkgs ,@args))]
     ["repl" ($ '(nix repl <nixpkgs>) #:input (current-input-port))]
     ["src"
