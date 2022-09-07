@@ -4,74 +4,14 @@
 (require racket/pretty
          racket/hash
          racket/os
-         racket/logging
+         tool
 
-         basedir
-         dirname
-         shell/pipeline
-         ansi-color)
-
-(define-logger app)
+         basedir)
 
 (current-basedir-program-name "nixt")
 
-(define (commands->string commands)
-  (string-join
-   (for/list ([command commands])
-     (string-join
-      (for/list ([arg command])
-        (define s (~a arg))
-        (if (string-contains? s " ")
-            (format "'~a'" s)
-            s))
-      " "))
-   " | "))
-(define ($ #:input [input-port #f]
-           #:output [output-port (current-output-port)]
-           #:error [error-port (current-error-port)]
-           . commands)
-  (log-app-debug
-   "$ ~a"
-   ;; Build a shell-like representation of the pipeline.
-   (commands->string commands))
-  (define pipeline
-    (apply run-subprocess-pipeline
-           commands
-           #:in (or input-port null-redirect)
-           #:out output-port
-           #:err (or error-port stdout-redirect)))
-  (define statuses (pipeline-status/list pipeline))
-  (match (filter (negate zero?) statuses)
-    [(list) (void)]
-    [(list _ ... )
-     (err "command \"~a\" failed with ~a"
-          (commands->string commands)
-          (match statuses
-            [(list code) code]
-            [many many]))]))
-(define ($/string . commands)
-  (define out (open-output-string))
-  (apply $ commands #:output out #:error (current-error-port))
-  (begin0
-      (string-trim (get-output-string out))
-    (close-output-port out)))
-
-(define (~ . elems)
-  (apply build-path (expand-user-path "~") (map ~a elems)))
-(define-syntax-rule (err fmt args ...)
-  (begin
-    (log-app-fatal fmt args ...)
-    (exit 1)))
-(define-syntax-rule (warn fmt args ...)
-  (begin
-    (log-app-error fmt args ...)))
-
-(define-syntax-rule (with-directory dir body ...)
-  (parameterize ([current-directory dir])
-    body ...))
-
 (define (main subcommand args)
-  (log-app-info "subcommand=~v args=~v" subcommand args)
+  (info "subcommand=~v args=~v" subcommand args)
   (match subcommand
     ["provides"
      (define param (car args))
@@ -79,7 +19,7 @@
                    (file-exists? param)
                    (find-executable-path param)))
      (unless path
-       (err "\"~a\" is not a file nor does it not match a program in $PATH." param))
+       (panic "\"~a\" is not a file nor does it not match a program in $PATH." param))
      ($ `(nix-store --query --outputs ,path))]
     ["rebuild" ($ '(sudo nixos-rebuild switch --show-trace))]
     ["upgrade" ($ '(sudo nixos-rebuild switch --upgrade --show-trace))]
@@ -93,8 +33,8 @@
         (format "~a-~a"
                 package
                 ;; Version:
-                ($/string `(nix eval --raw ,(format "nixpkgs#~a.version" package))))))
-     (match ($/string `(nix-build <nixpkgs> -A ,(format "~a.src" package)))
+                (values-second ($/string `(nix eval --raw ,(format "nixpkgs#~a.version" package)))))))
+     (match (values-second ($/string `(nix-build <nixpkgs> -A ,(format "~a.src" package))))
        [(? directory-exists? src-dir)
         (copy-directory/files src-dir output-dir)]
        [(? file-exists? archive)
@@ -109,19 +49,18 @@ rebuild        - update system to reflect configuration files
 upgrade        - do the above AND upgrade installed packages
 search PACKAGE - find packages
 help           - this message
+src PACKAGE    - get source
 EOF
       )]))
 
-(define *log-level* (make-parameter 'error))
-
+(*log-level* 'error)
 (module+ main
+  (tool-init!)
   (command-line
    #:multi
    [("-v" "--verbose") "Verbose" (*log-level* 'info)]
    [("-d" "--debug") "Debug" (*log-level* 'debug)]
    #:args (subcommand . args)
-   (void (with-logging-to-port
-           (current-error-port)
-           (thunk (main subcommand args))
-           #:logger app-logger
-           (*log-level*)))))
+   #;
+   (void (call-with-logging-to-actions (thunk (main subcommand args))))
+   (void (main subcommand args))))
