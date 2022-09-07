@@ -41,15 +41,29 @@
         (make-directory output-dir)
         ($ `(tar --strip-components=1 -C ,output-dir -xf ,archive))])
      (displayln (path->string output-dir))]
+    ["nixpkgs"
+     (match args
+       [(list "root")
+        ;; Get the root of the nixpkgs
+        ($ '(nix-instantiate --eval -E <nixpkgs>))]
+       [(list "src" pkg)
+        ;; Get the .nix file where pkg is defined.
+        (match (values-second ($/string `(nix eval --raw ,(format "nixpkgs#~a.meta.position" pkg))))
+          [(pregexp #px"^(.*):(\\d+)$" (list _ filename line-number))
+           ;; Seems like the line-number points to the meta.description
+           ;; declaration... not terribly useful.  Just print the filename.
+           (displayln filename)])])]
     ["help"
      (displayln
       #<<EOF
-provides FILE  - what package provides this file (or program)
-rebuild        - update system to reflect configuration files
-upgrade        - do the above AND upgrade installed packages
-search PACKAGE - find packages
-help           - this message
-src PACKAGE    - get source
+provides FILE       - what package provides this file (or program)
+rebuild             - update system to reflect configuration files
+upgrade             - do the above AND upgrade installed packages
+search PACKAGE      - find packages
+help                - this message
+src PACKAGE         - get source code
+nixpkgs root        - print out nixpkgs root
+nixpkgs src PACKAGE - locate the .nix file PACKAGE is defined
 EOF
       )]))
 
