@@ -25,6 +25,10 @@
     ["upgrade" ($ '(sudo nixos-rebuild switch --upgrade --show-trace))]
     ["search" ($ `(nix search nixpkgs ,@args))]
     ["repl" ($ '(nix repl <nixpkgs>) #:input (current-input-port))]
+    ["eval"
+     ($ `(nix eval --raw ,(string-join args " ")))
+     (when (terminal-port? (current-output-port))
+       (newline))]
     ["src"
      (define package (car args))
      (define output-dir
@@ -56,6 +60,8 @@
     ["help"
      (displayln
       #<<EOF
+repl
+eval expr
 provides FILE       - what package provides this file (or program)
 rebuild             - update system to reflect configuration files
 upgrade             - do the above AND upgrade installed packages
