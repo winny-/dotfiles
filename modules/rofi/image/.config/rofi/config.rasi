@@ -1,0 +1,8 @@
+configuration {
+	modi: "run,drun";
+	location: 2;  // Top Center
+        dpi: 226;
+
+        font: "monospace 10";  // This is completely idiotic
+}
+// @theme "/usr/share/rofi/themes/gruvbox-dark-hard.rasi"
