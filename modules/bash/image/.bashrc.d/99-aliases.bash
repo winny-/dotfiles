@@ -5,6 +5,7 @@ alias rm='rm --interactive=once'
 alias g=git
 alias t=tmux
 alias mpvc='mpvc -S ~/.config/mpv/mpv.socket'
+alias hw-probe='sudo -E hw-probe -all -upload -inventory LHW-ADDA-1F0A-C507-1BF1'
 
 alias sysu='systemctl --user'
 alias ju='journalctl --user'
