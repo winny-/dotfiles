@@ -12,6 +12,8 @@ alias ju='journalctl --user'
 alias wp='wine-prefix'
 alias dc='docker-compose'
 alias h=heroku
+alias fly=flyctl
+alias tf=terraform
 alias pq=portageq
 alias pqp='portageq get_repo_path /'
 
