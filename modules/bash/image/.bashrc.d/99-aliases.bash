@@ -1,4 +1,8 @@
 alias ls='ls --color=auto'
+alias grep='grep --colour=auto'
+alias egrep='egrep --colour=auto'
+alias fgrep='fgrep --colour=auto'
+alias ls='ls --color=auto'
 alias ll='ls -l'
 alias la='ll -a'
 alias rm='rm --interactive=once'
