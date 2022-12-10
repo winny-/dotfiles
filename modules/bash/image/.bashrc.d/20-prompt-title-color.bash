@@ -1,17 +1,15 @@
 # Based off of Gentoo's bashrc
 
-PROMPT_COMMAND=__prompt_command
-
 __prompt_command() {
     local code=$?
     PS1=""
 
     case ${TERM} in
+        screen*)
+            PS1+='\[\ek\u@\h \w\e\\\]'
+            ;;
         [aEkx]term*|rxvt*|gnome*|konsole*|interix|tmux*)
             PS1+='\[\e]0;\u@\h \w\a\]'
-            ;;
-        screen*)
-            PS1+='\[\ek\u@\h \w\\\]'
             ;;
         *)
             ;;
@@ -37,7 +35,6 @@ __prompt_command() {
 	PS1+='\u@\h \w \$ '
     fi
 }
-
 
 # Set colorful PS1 only on colorful terminals.
 # dircolors --print-database uses its own built-in database
@@ -74,3 +71,4 @@ else
 	esac
 fi
 
+PROMPT_COMMAND=__prompt_command
