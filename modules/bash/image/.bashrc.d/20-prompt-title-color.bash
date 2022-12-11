@@ -1,5 +1,7 @@
 # Based off of Gentoo's bashrc
 
+__noted_time=
+
 __prompt_command() {
     local code=$?
     PS1=""
@@ -15,6 +17,12 @@ __prompt_command() {
             ;;
     esac
 
+    __noted_time=1
+    local end_time
+    ((end_time = EPOCHSECONDS - __start_time))
+    if (( end_time > 5 )); then
+        PS1+='('"$(seconds_to_hms "$end_time")"') '
+    fi
 
     if (( code )); then
         if [[ $__use_color ]]; then

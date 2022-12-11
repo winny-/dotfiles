@@ -1,4 +1,10 @@
 _debug_hook() {
+    if [[ ! $BASH_COMMAND =~ ^(_direnv_hook|__prompt_command) || $__noted_time ]]; then
+        __start_time=$EPOCHSECONDS
+        __noted_time=
+    fi
+
+
     # Don't add garbage if stdout is redirected.
     if [[ ! -t 1 ]]; then
         return
