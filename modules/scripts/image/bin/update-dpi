@@ -31,7 +31,7 @@ How to install deps:
   ;; give up searching for the beginning of line.
   (match (regexp-match #px"  resolution:[[:blank:]]+(\\d+)x(\\d+)" ($/string '(xdpyinfo)) 0 #f #f #"\n")
     [(list _ x _ ...)
-     (+ 10 (string->number (bytes->string/utf-8 x)))]))
+     (+ 10 (string->number x))]))
 
 (define (compute-qt-scale-factor state)
   ;; Is there an easier way to do this without having to scale and deal with
@@ -84,6 +84,7 @@ How to install deps:
   ($ `(xfconf-query --channel xsettings --property /Gtk/CursorThemeSize --set ,(hash-ref computed CURSOR-SIZE)))
 
   (define p (expand-user-path "~/.cache/dpi.Xresources"))
+  (debug "Writing to config file ~a" p)
   (make-directory* (dirname p))
   (with-output-to-file p
     (thunk
