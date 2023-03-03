@@ -5,6 +5,7 @@ set_title() {
             ;;
         screen*)
             echo screen
+            # shellcheck disable=SC1003
             printf '\ek%s\e\\' "$*"
             ;;
         *)
@@ -17,10 +18,10 @@ seconds_to_hms() {
     local hours
     local minutes
     local seconds
-    let 'hours=raw/(60*60)'
-    let 'raw=raw%(60*60)'
-    let 'minutes=raw/60'
-    let 'seconds=raw%60'
+    (( hours=raw/(60*60) ))
+    (( raw=raw%(60*60) ))
+    (( minutes=raw/60 ))
+    (( seconds=raw%60 ))
     local ret=''
     (( hours )) && ret+="${hours}h"
     (( minutes )) && ret+="${minutes}m"
