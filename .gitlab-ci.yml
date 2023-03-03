@@ -1,8 +1,5 @@
 ---
 precommit:
-  image: debian:bullseye-slim
-  before_script:
-    - apt update
-    - apt install -y --no-install-recommends pre-commit
+  image: registry.gitlab.com/winny/pre-commit-docker:latest
   script:
     - pre-commit run -a
