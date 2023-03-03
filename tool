@@ -50,7 +50,7 @@ cmd_usage() {
     printf 'Usage: %s install mod ... 
            %s clean mod ...
 ' \
-	   "$progname"
+	   "$progname" "$progname"
     case $* in
 	help) exit 0 ;;
 	*) exit 1 ;;
@@ -68,11 +68,11 @@ case $1 in
         shift
         cmd_clean "$@"
 	;;
-    *|help)
-	cmd_usage "$@"
-	;;
     diff)
         cmd_diff "$@"
         ;;
+    *)
+	cmd_usage "$@"
+	;;
 esac
 
