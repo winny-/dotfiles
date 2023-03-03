@@ -5,17 +5,15 @@
 #
 # More info about keychain https://www.funtoo.org/Keychain
 
-keys=''
-file="${BASH_SOURCE[0]}"
-[[ -f ${file%/*}/keychain.keys ]] && keys=$(< "${file%/*}/keychain.keys")
+[[ -f $(_script_dir)/keychain.keys ]] && keys=$(< "$(_script_dir)/keychain.keys")
 
 # shellcheck disable=SC2086
-keychain -q --agents ssh,gpg ${keys//\~/$HOME}
+keychain --inherit any -q --agents ssh,gpg ${keys//\~/$HOME}
 
 unset keys
 unset file
 
 # shellcheck disable=SC1090
-. "${HOME}/.keychain/${HOSTNAME}-sh" 
+. "${HOME}/.keychain/${HOSTNAME}-sh"
 # shellcheck disable=SC1090
 . "${HOME}/.keychain/${HOSTNAME}-sh-gpg"

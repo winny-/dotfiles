@@ -27,3 +27,8 @@ seconds_to_hms() {
     (( seconds )) && ret+="${seconds}s"
     echo "$ret"
 }
+
+_script_dir() {
+    local file="${BASH_SOURCE[0]}"
+    echo "${file%/*}"
+}
