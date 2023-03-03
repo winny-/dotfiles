@@ -1,5 +1,12 @@
 ---
 precommit:
+  variables:
+    PRE_COMMIT_HOME=.pre-commit-cache
   image: registry.gitlab.com/winny/pre-commit-docker:latest
+  cache:
+    - key:
+        files: [.pre-commit-config.yaml]
+      paths:
+        files: [.pre-commit-cache]
   script:
     - pre-commit run -a
