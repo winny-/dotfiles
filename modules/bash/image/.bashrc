@@ -1,3 +1,5 @@
+# shellcheck shell=bash
+
 # This bashrc was originally based off gentoo's. Then I added sensible
 # bash. Then I saw a blog post recommending splitting .bashrc into
 # different files in the from of .bashrc.d and I'm inclined to think

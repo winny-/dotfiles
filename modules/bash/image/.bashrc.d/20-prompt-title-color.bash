@@ -19,6 +19,7 @@ __prompt_command() {
 
     __noted_time=1
     local end_time
+    # shellcheck disable=SC2154
     ((end_time = EPOCHSECONDS - __start_time))
     if (( end_time > 5 )); then
         PS1+='('"$(seconds_to_hms "$end_time")"') '
