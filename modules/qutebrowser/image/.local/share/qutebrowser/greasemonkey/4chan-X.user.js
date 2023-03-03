@@ -5,7 +5,7 @@
 // @minFFVer     26
 // @namespace    4chan-X
 // @description  4chan X is a script that adds various features to anonymous imageboards.
-// @license      MIT; https://github.com/ccd0/4chan-x/blob/master/LICENSE 
+// @license      MIT; https://github.com/ccd0/4chan-x/blob/master/LICENSE
 // @include      http://boards.4chan.org/*
 // @include      https://boards.4chan.org/*
 // @include      http://sys.4chan.org/*
@@ -118,7 +118,7 @@
 * https://github.com/ccd0/4chan-x/blob/master/LICENSE
 *
 * Appchan X Copyright © 2013-2016 Zixaphir <zixaphirmoxphar@gmail.com>
-* http://zixaphir.github.io/appchan-x/ 
+* http://zixaphir.github.io/appchan-x/
 * 4chan x Copyright © 2009-2011 James Campos <james.r.campos@gmail.com>
 * https://github.com/aeosynth/4chan-x
 * 4chan x Copyright © 2012-2014 Nicolas Stepien <stepien.nicolas@gmail.com>
@@ -128,7 +128,7 @@
 * 4chan x Copyright © 2012-2013 ihavenoface
 * http://ihavenoface.github.io/4chan-x/
 * 4chan SS Copyright © 2011-2013 Ahodesuka
-* https://github.com/ahodesuka/4chan-Style-Script/ 
+* https://github.com/ahodesuka/4chan-Style-Script/
 *
 * Permission is hereby granted, free of charge, to any person
 * obtaining a copy of this software and associated documentation
@@ -26600,7 +26600,7 @@ QuoteStrikeThrough = (function() {
 
 }).call(this);
 
-QuoteThreading = 
+QuoteThreading =
 /*
   <3 aeosynth
  */

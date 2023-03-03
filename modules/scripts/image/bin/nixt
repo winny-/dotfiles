@@ -10,6 +10,14 @@
 
 (current-basedir-program-name "nixt")
 
+(define (nixos-rebuild [args empty])
+  (append
+   '(sudo nixos-rebuild switch)
+   (if (*trace*)
+       '(--show-trace)
+       empty)
+   args))
+
 (define (main subcommand args)
   (info "subcommand=~v args=~v" subcommand args)
   (match subcommand
@@ -21,8 +29,8 @@
      (unless path
        (panic "\"~a\" is not a file nor does it not match a program in $PATH." param))
      ($ `(nix-store --query --outputs ,path))]
-    ["rebuild" ($ '(sudo nixos-rebuild switch --show-trace))]
-    ["upgrade" ($ '(sudo nixos-rebuild switch --upgrade --show-trace))]
+    ["rebuild" ($ (nixos-rebuild))]
+    ["upgrade" ($ (nixos-rebuild '(--upgrade)))]
     ["search" ($ `(nix search nixpkgs ,@args))]
     ["repl" ($ '(nix repl <nixpkgs>) #:input (current-input-port))]
     ["eval"
@@ -37,8 +45,8 @@
         (format "~a-~a"
                 package
                 ;; Version:
-                (values-second ($/string `(nix eval --raw ,(format "nixpkgs#~a.version" package)))))))
-     (match (values-second ($/string `(nix-build <nixpkgs> -A ,(format "~a.src" package))))
+                ($/string `(nix eval --raw ,(format "nixpkgs#~a.version" package))))))
+     (match ($/string `(nix-build <nixpkgs> -A ,(format "~a.src" package)))
        [(? directory-exists? src-dir)
         (copy-directory/files src-dir output-dir)]
        [(? file-exists? archive)
@@ -52,7 +60,7 @@
         ($ '(nix-instantiate --eval -E <nixpkgs>))]
        [(list "src" pkg)
         ;; Get the .nix file where pkg is defined.
-        (match (values-second ($/string `(nix eval --raw ,(format "nixpkgs#~a.meta.position" pkg))))
+        (match ($/string `(nix eval --raw ,(format "nixpkgs#~a.meta.position" pkg)))
           [(pregexp #px"^(.*):(\\d+)$" (list _ filename line-number))
            ;; Seems like the line-number points to the meta.description
            ;; declaration... not terribly useful.  Just print the filename.
@@ -73,11 +81,13 @@ nixpkgs src PACKAGE - locate the .nix file PACKAGE is defined
 EOF
       )]))
 
+(define *trace* (make-parameter #t))
 (*log-level* 'error)
 (module+ main
   (tool-init!)
   (command-line
    #:multi
+   [("--trace") "Show trace" (*trace* #t)]
    [("-v" "--verbose") "Verbose" (*log-level* 'info)]
    [("-d" "--debug") "Debug" (*log-level* 'debug)]
    #:args (subcommand . args)

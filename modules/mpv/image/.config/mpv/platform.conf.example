@@ -1,5 +1,5 @@
 # Example platform.conf
-# -*- mode: conf-unix; -*- 
+# -*- mode: conf-unix; -*-
 ao=jack,pulse,alsa              # Set audio output.
 jack-port=Media                 # Set jack port.
 audio-channels=stereo           # Set audio channels

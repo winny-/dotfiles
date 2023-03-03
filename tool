@@ -47,7 +47,7 @@ cmd_diff() {
 }
 
 cmd_usage() {
-    printf 'Usage: %s install mod ... 
+    printf 'Usage: %s install mod ...
            %s clean mod ...
 ' \
 	   "$progname" "$progname"
@@ -75,4 +75,3 @@ case $1 in
 	cmd_usage "$@"
 	;;
 esac
-

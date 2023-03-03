@@ -15,7 +15,7 @@ function toggle_geometry()
       print('No viewport.')
       return
    end
-      
+
    if mp.get_property('geometry') == '' then
       local g = w .. 'x' .. h
       mp.set_property('geometry', g)
