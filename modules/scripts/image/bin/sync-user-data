@@ -20,6 +20,8 @@ This synchronizes much of my user settings/data etc between machines.  Examples:
 |#
 #lang racket
 
+(provide (prefix-out sync-user-data- (all-defined-out)))
+
 (require racket/pretty
          racket/hash
          racket/os
@@ -105,10 +107,16 @@ This synchronizes much of my user settings/data etc between machines.  Examples:
              (flatten (for/list ([r repos])
                         `(-ignore ,(format "Path ~a" r)))))))
 
+(define (do-home)
+  (unless (*is-home?*)
+    (log-app-info "> Running sync-user-data --home on stargate...")
+    ($ '(ssh -A stargate sync-user-data --home))))
+
 (define *is-home?* (make-parameter #f))
 (define *verbosity* (make-parameter #f))
 
 (define (main)
+  (do-home)
   (do-repos)
   (unless (*is-home?*)
     (do-unison))
