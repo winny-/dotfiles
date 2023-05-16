@@ -7,13 +7,13 @@
 
 [[ -f $(_script_dir)/keychain.keys ]] && keys=$(< "$(_script_dir)/keychain.keys")
 
-# shellcheck disable=SC2086
-keychain --inherit any -q --agents ssh,gpg ${keys//\~/$HOME}
-
-unset keys
-unset file
-
 # shellcheck disable=SC1090
 . "${HOME}/.keychain/${HOSTNAME}-sh"
 # shellcheck disable=SC1090
 . "${HOME}/.keychain/${HOSTNAME}-sh-gpg"
+
+# shellcheck disable=SC2086
+eval "$(keychain --eval -q --inherit any --agents ssh,gpg ${keys//\~/$HOME})"
+
+unset keys
+unset file
