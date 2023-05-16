@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -eu -o pipefail
+curl -sS ipinfo.io |
+    jq -r '.city + ", " + .country + " (" + .hostname + " -> " + .ip + ")"'
