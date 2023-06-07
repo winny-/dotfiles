@@ -11,7 +11,7 @@ cmd_install() {
     [[ $# -eq 0 ]] && cmd_usage
     for mod in "$@"; do
 	mod="${mod#modules/}"  # Allow omitting the full path
-	stow  --override='.*' -vv -d "modules/$mod" -t "$HOME" --no-folding image
+	stow  --override='.*' --ignore='\.git' -vv -d "modules/$mod" -t "$HOME" --no-folding image
     done
 }
 

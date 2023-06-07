@@ -10,7 +10,7 @@ __prompt_command() {
         screen*)
             PS1+='\[\ek\u@\h \w\e\\\]'
             ;;
-        [aEkx]term*|rxvt*|gnome*|konsole*|interix|tmux*)
+        [aEkx]term*|rxvt*|gnome*|konsole*|interix|tmux*|alacritty)
             PS1+='\[\e]0;\u@\h \w\a\]'
             ;;
         *)
