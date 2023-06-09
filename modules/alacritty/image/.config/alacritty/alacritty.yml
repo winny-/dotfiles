@@ -12,7 +12,8 @@
 #  - /path/to/alacritty.yml
 import:
   - ~/.config/alacritty/local.yml
-  - ~/.config/alacritty/alacritty-theme/themes/hyper.yaml
+  # - ~/.config/alacritty/alacritty-theme/themes/hyper.yaml
+  - ~/.config/alacritty/winny-theme.yaml
 
 # Any items in the `env` entry below will be added as
 # environment variables. Some entries may override variables
@@ -26,16 +27,16 @@ import:
   # available, otherwise `xterm-256color` is used.
   #TERM: alacritty
 
-#window:
+window:
   # Window dimensions (changes require restart)
   #
   # Number of lines/columns (not pixels) in the terminal. Both lines and columns
   # must be non-zero for this to take effect. The number of columns must be at
   # least `2`, while using a value of `0` for columns and lines will fall back
   # to the window manager's recommended size
-  #dimensions:
-  #  columns: 0
-  #  lines: 0
+  dimensions:
+   columns: 120
+   lines: 40
 
   # Window position (changes require restart)
   #
@@ -49,12 +50,12 @@ import:
   #
   # Blank space added around the window in pixels. This padding is scaled
   # by DPI and the specified value is always added at both opposing sides.
-  #padding:
-  #  x: 0
-  #  y: 0
+  padding:
+   x: 2
+   y: 2
 
   # Spread additional padding evenly around the terminal content.
-  #dynamic_padding: false
+  # dynamic_padding: false
 
   # Window decorations
   #
@@ -185,7 +186,7 @@ import:
   #builtin_box_drawing: true
 
 # If `true`, bold text is drawn using the bright color variants.
-#draw_bold_text_with_bright_colors: false
+draw_bold_text_with_bright_colors: true
 
 # Colors (Tomorrow Night)
 #colors:
@@ -385,9 +386,9 @@ import:
   # When set to `true`, selected text will be copied to the primary clipboard.
   #save_to_clipboard: false
 
-#cursor:
+cursor:
   # Cursor style
-  #style:
+  style:
     # Cursor shape
     #
     # Values for `shape`:
@@ -403,7 +404,7 @@ import:
     #   - Off: Disable blinking by default
     #   - On: Enable blinking by default
     #   - Always: Force the cursor to always blink
-    #blinking: Off
+    blinking: On
 
   # Vi mode cursor style
   #
@@ -639,7 +640,7 @@ hints:
 #   - ToggleBlockSelection
 #   - ToggleSemanticSelection
 #       Toggle semantic selection based on `selection.semantic_escape_chars`.
-#   - CenterAroundViCursor
+#   - CenterAroundViCursorlor
 #       Center view around vi mode cursor
 #
 # - Vi mode exclusive cursor motion actions:
