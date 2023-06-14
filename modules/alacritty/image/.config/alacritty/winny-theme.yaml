@@ -1,6 +1,6 @@
 colors:
   cursor:
-    cursor: '#8ae234'
+    cursor: '#FF00FF'
     text: '#2e3436'
 
   selection:
