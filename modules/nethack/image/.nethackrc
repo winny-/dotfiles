@@ -1,13 +1,13 @@
-## This is an example nethackrc file (courtesy of nethack.alt.org).
-##
-## You should edit it to suit your needs.
-## Please read the Guidebook in /usr/share/doc/nethack or at www.nethack.org.
-##
-## Options which are enabled by default (like autoopen) can be disabled
-## by prefixing them with a !
-
-## If USE=X is enabled, this can be changed to x11
-#OPTIONS=windowtype:tty
+# status colors
+#OPTIONS=hilite_status:hitpoints/50%/red/green
+#OPTIONS=hilite_status:hunger/50%/red/normal     #not working?
+#OPTIONS=hilite_status:power/20%/red/normal
+#OPTIONS=hilite_status:strength/updown/red/green
+#OPTIONS=hilite_status:dexterity/updown/red/green
+#OPTIONS=hilite_status:constitution/updown/red/green
+#OPTIONS=hilite_status:intelligence/updown/red/green
+#OPTIONS=hilite_status:wisdom/updown/red/green
+#OPTIONS=hilite_status:charisma/updown/red/green
 
 ## Custom fruit and pet names
 OPTIONS=fruit:dead bit
@@ -46,8 +46,9 @@ OPTIONS=hilite_pet
 ## Use inverse for piles of items
 OPTIONS=hilite_pile
 
-## Show experience
+## Show experience, score
 OPTIONS=showexp
+OPTIONS=showscore
 
 ## Show elapsed game time (in turns)
 OPTIONS=time
@@ -67,7 +68,7 @@ SYMBOLS=S_boulder:0
 #SYMBOLS=S_lava:~
 #SYMBOLS=S_pool:~
 #SYMBOLS=S_water:~
-#SYMBOLS=S_ghost:8
+SYMBOLS=S_ghost:X
 #SYMBOLS=S_golem:7
 
 ## Sort items by name. One of "none", "loot", or "full"
