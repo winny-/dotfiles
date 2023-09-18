@@ -1,0 +1,25 @@
+# Ratpoison configuration
+
+# I already use C-t for tmux, so use C-i for ratpoison, given it's
+# often treated like TAB in most windows I use, so it's not a frequently
+# pressed key.
+
+definekey top C-i readkey root
+definekey root C-i other
+definekey root i meta
+set meta C-i
+undefinekey top C-t
+undefinekey root C-t
+undefinekey root t
+
+# Other keys
+
+definekey root backslash restart 
+
+# mouse goes where it's needed means less mousing
+set warp 1
+
+# Tell the user how to use this configuration.  And don't tell them 
+# about the old C-t message.
+set startupmessage 0
+echo Welcome to ratpoison.  Type C-i ? to begin.
