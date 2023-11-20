@@ -4,3 +4,4 @@ for cmd in jhmod vultr-cli flyctl; do
         source <("$cmd" completion bash)
     fi
 done
+command -v dgltool >/dev/null && eval "$(_DGLTOOL_COMPLETE=bash_source dgltool)"
