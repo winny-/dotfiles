@@ -69,5 +69,11 @@ unset i
 
 ##################################################
 
-# shellcheck disable=SC1090
-[[ -f ~/.bashrc.local ]] && . ~/.bashrc.local
+if [[ -f ~/.bashrc.local ]]; then
+    # shellcheck disable=SC1090
+    . ~/.bashrc.local
+fi
+
+# Non-zero exit codes appear in this module's Bash prompt; ergo ensure the very
+# last command in the .bashrc has a zero exit code.
+:
