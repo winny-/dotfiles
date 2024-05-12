@@ -47,6 +47,11 @@ shopt -s histappend
 
 ##################################################
 
+# Try to set up bash completion if it hasn't been set up already.  Needed for
+# Debian.
+if [[ -z $(complete -p) && -f /etc/bash_completion ]]; then
+    . /etc/bash_completion
+fi
 
 ##################################################
 # Source the numerically prefixed startup files in
