@@ -11,4 +11,3 @@ auto-execute *.yaml auto-indent-mode 1
 
 auto-execute *.txt auto-fill-mode 1
 auto-execute *.md auto-fill-mode 1
-

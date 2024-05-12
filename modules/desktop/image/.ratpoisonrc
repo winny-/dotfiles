@@ -14,13 +14,13 @@ undefinekey root t
 
 # Other keys
 
-definekey root backslash restart 
+definekey root backslash restart
 definekey root L exec slock
 
 # mouse goes where it's needed means less mousing
 set warp 1
 
-# Tell the user how to use this configuration.  And don't tell them 
+# Tell the user how to use this configuration.  And don't tell them
 # about the old C-t message.
 set startupmessage 0
 echo Welcome to ratpoison.  Type C-i ? to begin.
