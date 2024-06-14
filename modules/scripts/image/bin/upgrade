@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+# Upgrade a host.  Presently handles the initial upgrade; later revisions
+# should handle cleanup (e.g. apt-get auto-remove and emerge -avc) following a
+# successful reboot.  Lastly, package list refreshes should be rate-limited or
+# optional.
+
+set -eu -o pipefail
+
+panic() {
+    printf 'Panic: %s\n' "$*"
+    exit 1
+}
+
+has_command() {
+    command -v "$1" &> /dev/null
+}
+
+# shellcheck disable=SC1091
+. /etc/os-release
+
+if [[ $ID = debian ]]; then
+    # apt-get update refreshes the available package list.
+    # apt-get upgrade installs updates that do NOT temporarily break dependencies nor REMOVE packages.
+    # apt-get dist-upgrade installs updates that DO temporarily break dependencies and REMOVE packages.
+    sudo sh -c 'apt-get update && apt-get upgrade && apt-get dist-upgrade'
+elif [[ $ID = gentoo ]]; then
+    # emerge --sync refreshes the available ebuild list.
+    # emerge ... @world upgrades and rebuilds all software that is out of date.
+    # emerge ... @preserved-rebuild rebuilds software whose libraries were upgraded from underneath it.
+    sudo sh -c '
+         emerge --sync &&
+         emerge -uDUav --changed-deps --verbose-conflicts @world &&
+         emerge -av @preserved-rebuild
+    '
+else
+    panic "Do not know how to upgrade $ID"
+fi
+
+if has_command flatpak; then
+    sudo flatpak update
+fi
+
+if has_command snap; then
+    sudo snap refresh
+fi
