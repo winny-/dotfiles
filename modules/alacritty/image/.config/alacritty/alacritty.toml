@@ -1,0 +1,26 @@
+import = [
+       "~/.config/alacritty/local.toml",
+       "~/.config/alacritty/local.yml",
+       "~/.config/alacritty/winny-theme.toml",
+]
+
+[colors]
+draw_bold_text_with_bright_colors = true
+
+[cursor]
+blink_interval = 750
+blink_timeout = 10
+
+[cursor.style]
+blinking = "On"
+
+[hints]
+alphabet = "uhetonasid"
+
+[window.dimensions]
+columns = 120
+lines = 40
+
+[window.padding]
+x = 2
+y = 2
