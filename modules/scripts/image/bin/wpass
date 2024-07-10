@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+
+# XXX https://stackoverflow.com/questions/37818335/mlock-a-program-from-a-wrapper
+umask 077
+
+pref_dir="$HOME/.config/wpass"
+mkdir -p "$pref_dir"
+
+: "${PASSWORD_STORE_DIR:=$HOME/.password-store}"
+: "${PASSWORD_STORE_GPG_OPTS:=}"
+
+err() {
+    printf "%s\n" "$*" >&2
+    exit 1
+}
+
+cmd=copyboth
+best_username=(login email)
+
+dirty=()
+
+cleanup() {
+    for path in "${dirty[@]}"; do
+        rm -f "$path"
+    done
+}
+
+trap cleanup EXIT
+
+clip() {
+    if [[ $WAYLAND_DISPLAY ]]; then
+        wl-copy
+    elif [[ $DISPLAY ]]; then
+        read -r temp
+        xclip -in -selection primary <<< "$temp"
+        xclip -in -selection clipboard <<< "$temp"
+    elif [[ $TMUX ]]; then
+        f="$(mktemp -t XXXXXXXXXX.wpass)"
+        dirty+=("$f")
+        cat > "$f"
+        tmux load-buffer "$f"
+    else
+        err "Don't know how to set clipboard in environment!"
+    fi
+}
+
+find() {
+    command find "$PASSWORD_STORE_DIR" -type f -name '*.gpg' |
+        sed -e 's/\.gpg$//' -e "s,^${PASSWORD_STORE_DIR}/,," |
+        fzf \
+            --history="$pref_dir/fzf.history" \
+            --scheme=history
+
+}
+
+# pass ls, pass show both will list directory if given a directory relpath.
+# Call gpg directly in order to avoid this behavior.
+decrypt() {
+    local file
+    file="${PASSWORD_STORE_DIR}/${1}.gpg"
+    [[ ! -f $file ]] && err "No such entry \"$path\""
+    # shellcheck disable=SC2086
+    gpg $PASSWORD_STORE_GPG_OPTS --quiet --decrypt "$file"
+}
+
+copyboth() {
+    local entry username path
+    if [[ $# -ne 1 ]]; then
+        # It thinks the $(find) below is find(1) instead of the shell function
+        # declared above :thinking:
+        #
+        # shellcheck disable=SC2185
+        path=$(find)
+    else
+        path="$1"
+    fi
+    printf 'Opening %s ... ' "$path"
+    if ! entry="$(decrypt "$path")"; then
+        err "Could not open entry \"$path\".  Giving up."
+    fi
+    echo 'success!'
+    username=''
+    for name in "${best_username[@]}"; do
+        username="$(awk -F': ' "/$name/ { print \$2 }" <<< "$entry")"
+        [[ $username ]] && break
+    done
+    [[ -z $username ]] && err "Did not find username, giving up."
+    clip <<< "$username"
+    echo -n 'COPIED Username.  Type RETURN to continue.'
+    read -r
+    clip <<< "$(awk 'NR == 1' <<< "$entry")"
+    echo -n "COPIED Password.  Type RETURN to clear clipboard."
+    read -r
+    clip < /dev/null
+}
+
+"$cmd" "$@"

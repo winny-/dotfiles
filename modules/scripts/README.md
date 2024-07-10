@@ -1,0 +1,80 @@
+# Scripts
+
+Almost all the scripts are written in `bash`.
+
+## `wpass`
+
+`pass` companion tool to streamline common workflows.  It should _NOT_ on a graphical desktop environment to work.
+
+Its initial version merely streamlines finding an entry, copy-pasting the
+login, then copy-pasting the password.
+
+Future revision might include entry generation using `pwgen`.
+
+### Dependencies
+Requires `fzf`, `pass` and its dependencies, `xclip`, `wl-clipboard`, and
+`tmux` for best experience.
+
+## `toggle-ipv6`
+
+Toggle IPv6 via the Linux kernel sysctl interface.
+
+### Dependencies
+
+`sudo` and `sysctl`.
+
+## `geoip`
+
+Approximate your current location via Internet-facing IP address.
+
+### Dependencies
+
+`curl` and `jq`.
+
+## `git-prune`
+
+Prune all branches no longer on any remotes.
+
+## `cuesplit`
+
+Split a flac image with cue file into individual track files.  Heavily modified
+from somebody's original work.  Source?  I forgot.
+
+### Dependencies
+
+Read the file I forgot.
+
+## `upgrade`
+
+Upgrade my hosts.
+
+### Dependencies
+
+`sudo`.
+
+A Debian or Gentoo host.
+
+Optionally `flatpak` and `snap`.
+
+## `0x0`
+
+Quick and dirty script to send stdin to [0x0.st][0x0].
+
+### Dependencies
+
+`curl`.
+
+### See also
+
+`wgetpaste` and friends.
+
+[0x0]: https://0x0.st/
+
+## `generate-recovery-archive`
+
+Generate a GPG encrypted tarball to recover from a Borgmatic-configured Borg
+repository.
+
+### Dependencies
+
+Read the script it's thing.
