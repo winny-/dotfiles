@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -eu -o pipefail
+
 # XXX https://stackoverflow.com/questions/37818335/mlock-a-program-from-a-wrapper
 umask 077
 
@@ -8,13 +10,14 @@ mkdir -p "$pref_dir"
 
 : "${PASSWORD_STORE_DIR:=$HOME/.password-store}"
 : "${PASSWORD_STORE_GPG_OPTS:=}"
+: "${PAGER:=less}"
 
 err() {
     printf "%s\n" "$*" >&2
     exit 1
 }
 
-cmd=copyboth
+cmd=default
 best_username=(login email)
 
 dirty=()
@@ -28,13 +31,13 @@ cleanup() {
 trap cleanup EXIT
 
 clip() {
-    if [[ $WAYLAND_DISPLAY ]]; then
+    if [[ ${WAYLAND_DISPLAY+set} ]]; then
         wl-copy
-    elif [[ $DISPLAY ]]; then
+    elif [[ ${DISPLAY+set} ]]; then
         read -r temp
         xclip -in -selection primary <<< "$temp"
         xclip -in -selection clipboard <<< "$temp"
-    elif [[ $TMUX ]]; then
+    elif [[ ${TMUX+set} ]]; then
         f="$(mktemp -t XXXXXXXXXX.wpass)"
         dirty+=("$f")
         cat > "$f"
@@ -63,17 +66,21 @@ decrypt() {
     gpg $PASSWORD_STORE_GPG_OPTS --quiet --decrypt "$file"
 }
 
-copyboth() {
-    local entry username path
+path_or_find() {
     if [[ $# -ne 1 ]]; then
         # It thinks the $(find) below is find(1) instead of the shell function
         # declared above :thinking:
         #
         # shellcheck disable=SC2185
-        path=$(find)
+        find
     else
-        path="$1"
+        echo "$1"
     fi
+}
+
+copyboth() {
+    local entry username path
+    path="$(path_or_find "$@")"
     printf 'Opening %s ... ' "$path"
     if ! entry="$(decrypt "$path")"; then
         err "Could not open entry \"$path\".  Giving up."
@@ -93,5 +100,51 @@ copyboth() {
     read -r
     clip < /dev/null
 }
+
+default() {
+    copyboth "$@"
+}
+
+show() {
+    local entry path
+    path="$(path_or_find "$@")"
+    printf 'Opening %s ... ' "$path"
+    if ! entry="$(decrypt "$path")"; then
+        err "Could not open entry \"$path\".  Giving up."
+    fi
+    printf 'Ok.  Piping to a pager.\n'
+    "$PAGER" <<< "$entry"
+}
+
+usage() {
+    cat <<EOF
+wpass show [entry]      # Show the entry with a pager
+wpass copyboth [entry]  # Copy username and password to clipboard
+wpass find              # Find an entry and print the path to stdout
+wpass [--] [entry]      # Defaults to "wpass copyboth [entry]"
+EOF
+    exit
+}
+
+if [[ $# -lt 1 ]]; then
+    cmd=default
+else
+    case "$1" in
+        show|copyboth|find)
+            cmd="$1"
+            shift
+            ;;
+        usage|help|-h|--help)
+            usage
+            ;;
+        --)
+            shift
+            cmd=default
+            ;;
+        *)
+            cmd=default
+            ;;
+    esac
+fi
 
 "$cmd" "$@"

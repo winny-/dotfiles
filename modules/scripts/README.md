@@ -4,16 +4,17 @@ Almost all the scripts are written in `bash`.
 
 ## `wpass`
 
-`pass` companion tool to streamline common workflows.  It should _NOT_ on a graphical desktop environment to work.
+`pass` companion tool to streamline common workflows.  It should _NOT_ on a
+graphical desktop environment to work.
 
-Its initial version merely streamlines finding an entry, copy-pasting the
-login, then copy-pasting the password.
+`wpass` can find entries, streamline copy-paste username followed by password,
+and pipe entries to a pager.
 
 Future revision might include entry generation using `pwgen`.
 
 ### Dependencies
-Requires `fzf`, `pass` and its dependencies, `xclip`, `wl-clipboard`, and
-`tmux` for best experience.
+Requires `fzf`, `pass` and its dependencies, `xclip`, `wl-clipboard`, `tmux`,
+`less` for best experience.
 
 ## `toggle-ipv6`
 
