@@ -19,6 +19,6 @@ eval { $json = decode_json($response->{content}) };
 die "Bad JSON from GET $url: [$@]" if $@;
 
 my $s = "$json->{city}, $json->{country} (";
-$s .= "$json->{hostname} ->" if $json->{'hostname'};
+$s .= "$json->{hostname} -> " if $json->{'hostname'};
 $s .= "$json->{ip})";
 print $s, "\n";

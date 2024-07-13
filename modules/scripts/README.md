@@ -30,7 +30,7 @@ Approximate your current location via Internet-facing IP address.
 
 ### Dependencies
 
-`curl` and `jq`.
+perl 5.
 
 ## `git-prune`
 
