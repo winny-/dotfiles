@@ -1,4 +1,24 @@
-#!/usr/bin/env bash
-set -eu -o pipefail
-curl -sS ipinfo.io |
-    jq -r '.city + ", " + .country + " (" + .hostname + " -> " + .ip + ")"'
+#!/usr/bin/env perl
+use strict;
+use JSON::PP;
+use HTTP::Tiny;
+
+my $url = 'https://ipinfo.io/';
+
+my $response = HTTP::Tiny->new(agent=>'curl')->get($url);
+unless ($response->{success}) {
+    if ($response->{status} == 599) {
+        die "Failed to GET $url: $response->{content}";
+    } else {
+        die "Failed to GET $url: $response->{status} $response->{reason}";
+    }
+}
+
+my $json;
+eval { $json = decode_json($response->{content}) };
+die "Bad JSON from GET $url: [$@]" if $@;
+
+my $s = "$json->{city}, $json->{country} (";
+$s .= "$json->{hostname} ->" if $json->{'hostname'};
+$s .= "$json->{ip})";
+print $s, "\n";
