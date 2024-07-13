@@ -34,9 +34,9 @@ clip() {
     if [[ ${WAYLAND_DISPLAY+set} ]]; then
         wl-copy
     elif [[ ${DISPLAY+set} ]]; then
-        read -r temp
-        xclip -in -selection primary <<< "$temp"
-        xclip -in -selection clipboard <<< "$temp"
+        read -r temp || temp=''
+        printf '%s' "$temp" | xclip -in -selection primary
+        printf '%s' "$temp" | xclip -in -selection clipboard
     elif [[ ${TMUX+set} ]]; then
         f="$(mktemp -t XXXXXXXXXX.wpass)"
         dirty+=("$f")
@@ -47,13 +47,27 @@ clip() {
     fi
 }
 
-find() {
+entries() {
     command find "$PASSWORD_STORE_DIR" -type f -name '*.gpg' |
-        sed -e 's/\.gpg$//' -e "s,^${PASSWORD_STORE_DIR}/,," |
-        fzf \
-            --history="$pref_dir/fzf.history" \
-            --scheme=history
+        sed -e 's/\.gpg$//' -e "s,^${PASSWORD_STORE_DIR}/,,"
+}
 
+find() {
+    [[ -t 0 ]] || err 'wpass find: STDIN is not the terminal.'
+    if command -v fzf &>/dev/null; then
+        entries |
+            fzf --history="$pref_dir/fzf.history" \
+                --scheme=history
+    else
+        echo 'No fzf found.  Falling back to dumb select.  Sorry for the long output!' >&2
+        (
+            IFS=$'\n'
+            select choice in $(entries); do
+                echo $choice
+                break
+            done
+        )
+    fi
 }
 
 # pass ls, pass show both will list directory if given a directory relpath.
@@ -95,7 +109,7 @@ copyboth() {
     clip <<< "$username"
     echo -n 'COPIED Username.  Type RETURN to continue.'
     read -r
-    clip <<< "$(awk 'NR == 1' <<< "$entry")"
+    awk 'NR == 1' <<< "$entry" | clip
     echo -n "COPIED Password.  Type RETURN to clear clipboard."
     read -r
     clip < /dev/null
