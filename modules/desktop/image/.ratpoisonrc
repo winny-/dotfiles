@@ -1,3 +1,5 @@
+# -*- mode: conf-space; -*-
+
 # Ratpoison configuration
 
 # I already use C-t for tmux, so use C-i for ratpoison, given it's
@@ -19,6 +21,12 @@ definekey root L exec slock
 
 # mouse goes where it's needed means less mousing
 set warp 1
+
+# Better colors
+set fgcolor rgb:4F/94/CD
+set bgcolor black
+set fwcolor black
+set bwcolor black
 
 # Tell the user how to use this configuration.  And don't tell them
 # about the old C-t message.
