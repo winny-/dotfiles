@@ -10,47 +10,9 @@
 # This should be the first thing ran in the bashrc
 ###################################################
 
-
 if [[ $- != *i* ]] ; then
 	# Shell is non-interactive.  Be done now!
 	return
-fi
-
-##################################################
-
-
-##################################################
-# Stuff I haven't sorted yet
-##################################################
-
-# Bash won't get SIGWINCH if another process is in the foreground.
-# Enable checkwinsize so that bash will check the terminal size when
-# it regains control.  #65623
-# http://cnswww.cns.cwru.edu/~chet/bash/FAQ (E11)
-shopt -s checkwinsize
-
-# Disable completion when the input buffer is empty.  i.e. Hitting tab
-# and waiting a long time for bash to expand all of $PATH.
-shopt -s no_empty_cmd_completion
-
-# Enable history appending instead of overwriting when exiting.  #139609
-shopt -s histappend
-
-# Save each command to the history file as it's executed.  #517342
-# This does mean sessions get interleaved when reading later on, but this
-# way the history is always up to date.  History is not synced across live
-# sessions though; that is what `history -n` does.
-# Disabled by default due to concerns related to system recovery when $HOME
-# is under duress, or lives somewhere flaky (like NFS).  Constantly syncing
-# the history will halt the shell prompt until it's finished.
-#PROMPT_COMMAND='history -a'
-
-##################################################
-
-# Try to set up bash completion if it hasn't been set up already.  Needed for
-# Debian.
-if [[ -z $(complete -p) && -f /etc/bash_completion ]]; then
-    . /etc/bash_completion
 fi
 
 ##################################################
@@ -67,6 +29,8 @@ for i in ~/.bashrc.d/[0-9]*; do
 done
 unset i
 
+##################################################
+# And a ~/.bashrc.local that is to never exist in this git repository.
 ##################################################
 
 if [[ -f ~/.bashrc.local ]]; then

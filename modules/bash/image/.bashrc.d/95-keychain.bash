@@ -5,15 +5,17 @@
 #
 # More info about keychain https://www.funtoo.org/Keychain
 
-[[ -f $(_script_dir)/keychain.keys ]] && keys=$(< "$(_script_dir)/keychain.keys")
+if command -v keychain &> /dev/null; then
+    [[ -f $(_script_dir)/keychain.keys ]] && keys=$(< "$(_script_dir)/keychain.keys")
 
-# shellcheck disable=SC1090
-[[ -r ${HOME}/.keychain/${HOSTNAME}-sh ]] && . "${HOME}/.keychain/${HOSTNAME}-sh"
-# shellcheck disable=SC1090
-[[ -r ${HOME}/.keychain/${HOSTNAME}-sh-gpg ]] && . "${HOME}/.keychain/${HOSTNAME}-sh-gpg"
+    # shellcheck disable=SC1090
+    [[ -r ${HOME}/.keychain/${HOSTNAME}-sh ]] && . "${HOME}/.keychain/${HOSTNAME}-sh"
+    # shellcheck disable=SC1090
+    [[ -r ${HOME}/.keychain/${HOSTNAME}-sh-gpg ]] && . "${HOME}/.keychain/${HOSTNAME}-sh-gpg"
 
-# shellcheck disable=SC2086
-eval "$(keychain --eval -q --inherit any --agents ssh,gpg ${keys//\~/$HOME})"
+    # shellcheck disable=SC2086
+    eval "$(keychain --eval -q --inherit any --agents ssh,gpg ${keys//\~/$HOME})"
 
-unset keys
-unset file
+    unset keys
+    unset file
+fi
