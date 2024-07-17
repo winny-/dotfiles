@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# Quick and dirty interface for looking up words.
+
+set -eu -o pipefail
+
+dict() {
+    local word
+    word="$1"
+    # Grabbed this from the environment variable $LESS belonging to the process
+    # forked from "man less".
+    lessprompt="dict \"$word\" ?ltline %lt?L/%L.:byte %bB?s/%s..?e (END):?pB %pB\\%.. (press h for help or q to quit)"
+    export LESS="-Pm${lessprompt}\$-PM${lessprompt}\$-M"
+    command dict "$word" | less
+}
+
+usage() {
+    echo 'wdict                  # Interactive mode'
+    echo 'wdict [--] words ...   # Look up each word'
+    echo 'wdict <--help|help|-?> # print this usage text'
+    exit
+}
+
+if [[ $# -gt 0 ]]; then
+    words=()
+    for arg in "$@"; do
+        case "$arg" in
+            --)
+                shift
+                break
+                ;;
+            -*|\?|help|'')
+                usage
+                ;;
+            *)
+                words+=("$arg")
+                ;;
+        esac
+    done
+    if [[ ${#words[@]} -eq 0 ]]; then
+        usage
+    fi
+    for word in "${words[@]}"; do
+        dict "$word"
+    done
+else
+    while read -p 'Word? ' -r -e word; do
+        [[ -z $word ]] && break
+        dict "$word"
+    done
+fi
+

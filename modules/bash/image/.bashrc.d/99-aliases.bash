@@ -23,3 +23,5 @@ alias pqp='portageq get_repo_path /'
 
 alias e=emacs
 alias ec=emacsclient
+
+alias d=wdict
