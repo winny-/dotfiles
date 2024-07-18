@@ -10,7 +10,12 @@ dict() {
     # forked from "man less".
     lessprompt="dict \"$word\" ?ltline %lt?L/%L.:byte %bB?s/%s..?e (END):?pB %pB\\%.. (press h for help or q to quit)"
     export LESS="-Pm${lessprompt}\$-PM${lessprompt}\$-M"
-    command dict "$word" | less
+    if ! command dict "$word" | less; then
+        if [[ $? -eq 21 ]]; then
+            return 0
+        fi
+        return $?
+    fi
 }
 
 usage() {
