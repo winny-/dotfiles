@@ -1,4 +1,14 @@
 #!/usr/bin/env perl
+
+=head1
+
+GeoIP script.  Should work on most perl5 installations without added
+dependencies.
+
+On Termux one may need to run "cpan install Net::SSLeay IO::Socket::SSL".
+
+=cut
+
 use strict;
 use JSON::PP;
 use HTTP::Tiny;
