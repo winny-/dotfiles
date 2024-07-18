@@ -3,18 +3,40 @@
 
 set -eu -o pipefail
 
+workdir=$(mktemp -td wdict.XXXXXX)
+cleanup() {
+    rm -rf "$workdir"
+}
+trap cleanup EXIT
+
 dict() {
-    local word
+    local word code filename lessprompt
+    code=0
     word="$1"
     # Grabbed this from the environment variable $LESS belonging to the process
     # forked from "man less".
     lessprompt="dict \"$word\" ?ltline %lt?L/%L.:byte %bB?s/%s..?e (END):?pB %pB\\%.. (press h for help or q to quit)"
-    export LESS="-Pm${lessprompt}\$-PM${lessprompt}\$-M"
-    if ! command dict "$word" | less; then
-        if [[ $? -eq 21 ]]; then
-            return 0
+    export LESS="-Pm${lessprompt}\$-PM${lessprompt}\$-M\$-b64"
+    # Write the de
+    filename="${workdir}/${RANDOM}.txt"
+    {
+        set +e
+        command dict "$word" &> "$filename"
+        code=$?
+        set -e
+    }
+    if (( code != 0 )); then
+        # See "man 1 dict" /EXIT STATUS.
+        cat "$filename" >&2
+        if (( code = 20 )) || (( code = 21)); then
+            # No match.
+            return
+        else
+            return $code
         fi
-        return $?
+    else
+        head -n1 "$filename"  # print number of matches to terminal.
+        less "$filename"  # Use pager for entire dict output.
     fi
 }
 
