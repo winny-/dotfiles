@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -eu -o pipefail
+
+panic() {
+    printf 'Fatal: %s\n' "$*" >&2
+    exit 1
+}
+
+if command -v rar &>/dev/null; then
+    rar=rar
+elif command -v unrar &>/dev/null; then
+    rar=unrar
+else
+    panic 'Need rar or unrar in PATH.'
+fi
+
+if ! command -v zip &>/dev/null; then
+    panic 'Need zip in PATH.'
+fi
+
+dir=$(mktemp -t -d cbr2cbz.XXXXXXXXXXXXX)
+trap 'rm -rf "$dir"' EXIT
+
+
+doit() {
+    abspath="$(readlink -f "$1")"
+    basename="${abspath##*/}"
+    no_ext="${basename%*.cbr}"
+    zipfile="${no_ext}.cbz"
+    pushd "$dir" >/dev/null
+    mkdir "$no_ext"
+    pushd "$no_ext" >/dev/null
+    "$rar" x -idq "$abspath"
+    zip -rq "../$zipfile" .
+    popd >/dev/null
+    popd >/dev/null
+    cp "${dir}/${zipfile}" .
+}
+
+for f in "$@"; do
+    doit "$f"
+done
