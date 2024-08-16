@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+
+# Upgrade a host.  Presently handles the initial upgrade; later revisions
+# should handle cleanup (e.g. apt-get auto-remove and emerge -avc) following a
+# successful reboot.  Lastly, package list refreshes should be rate-limited or
+# optional.
+
+set -eu -o pipefail
+
+panic() {
+    printf 'Panic: %s\n' "$*"
+    exit 1
+}
+
+usage() {
+    cat <<EOF
+software          # upgrade software
+software upgrade  # upgrade software
+software cleanup  # clean up after successful reboot
+softwrae firmware # upgrade firmware
+EOF
+}
+
+has_command() {
+    command -v "$1" &> /dev/null
+}
+
+sudo=sudo
+if [[ $(id -u) -eq 0 ]]; then  # Skip sudo where possible.
+    sudo='command'
+fi
+
+# shellcheck disable=SC1091
+if ! . /etc/os-release 2>/dev/null; then
+    if [[ ${TERMUX_VERSION+set} ]]; then
+        sudo='command'  # Termux doesn't run as root.
+        case ${TERMUX_MAIN_PACKAGE_FORMAT-idk} in
+            debian)
+                ID=debian
+                ;;
+            *)
+                panic "Detected Termux without a known package manager."
+                ;;
+        esac
+    else
+        panic 'Could not read /etc/os-release.  Heuristic OS detection failed.'
+    fi
+fi
+
+do_upgrade() {
+    if [[ $ID = debian ]]; then
+        # apt-get update refreshes the available package list.
+        # apt-get upgrade installs updates that do NOT temporarily break dependencies nor REMOVE packages.
+        # apt-get dist-upgrade installs updates that DO temporarily break dependencies and REMOVE packages.
+        $sudo sh -c 'apt-get update && apt-get upgrade && apt-get dist-upgrade'
+    elif [[ $ID = gentoo ]]; then
+        # emerge --sync refreshes the available ebuild list.
+        # emerge ... @world upgrades and rebuilds all software that is out of date.
+        # emerge ... @preserved-rebuild rebuilds software whose libraries were upgraded from underneath it.
+        $sudo sh -c '
+         emerge --sync &&
+         emerge -uDUav --changed-deps --verbose-conflicts @world &&
+         emerge -av @preserved-rebuild
+    '
+    else
+        panic "Do not know how to upgrade $ID"
+    fi
+
+    if has_command flatpak; then
+        $sudo flatpak update
+    fi
+
+    if has_command snap; then
+        $sudo snap refresh
+    fi
+}
+
+do_cleanup() {
+    if [[ $ID = debian ]]; then
+        $sudo apt-get autoremove
+    elif [[ $ID = gentoo ]]; then
+        $sudo emerge -avc
+    else
+        panic "Do not know how to cleanup $ID"
+    fi
+}
+
+do_firmware() {
+    set +e
+    $sudo fwupdmgr refresh
+    code=$?
+    if [[ $code -ne 2 && $code -ne 0 ]]; then
+        panic "fwupdmgr refresh failed with code $code"
+    fi
+    $sudo fwupdmgr update
+    code=$?
+    if [[ $code -ne 2 && $code -ne 0 ]]; then
+        panic "fwupdmgr update failed with code $code"
+    fi
+    set -e
+}
+
+cmd=upgrade
+if [[ $# -gt 2 ]]; then
+    usage
+elif [[ $# -eq 1 ]]; then
+    cmd="$1"
+    shift
+fi
+
+func="do_${cmd}"
+if kind=$(type -t "$func") && [[ $kind = function ]]; then
+    $func "$@"
+else
+    usage
+fi
