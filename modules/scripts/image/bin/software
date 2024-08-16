@@ -52,16 +52,20 @@ do_upgrade() {
         # apt-get update refreshes the available package list.
         # apt-get upgrade installs updates that do NOT temporarily break dependencies nor REMOVE packages.
         # apt-get dist-upgrade installs updates that DO temporarily break dependencies and REMOVE packages.
-        $sudo sh -c 'apt-get update && apt-get upgrade && apt-get dist-upgrade'
+        $sudo sh -c '
+            apt-get update &&
+            apt-get upgrade &&
+            apt-get dist-upgrade
+        '
     elif [[ $ID = gentoo ]]; then
         # emerge --sync refreshes the available ebuild list.
         # emerge ... @world upgrades and rebuilds all software that is out of date.
         # emerge ... @preserved-rebuild rebuilds software whose libraries were upgraded from underneath it.
         $sudo sh -c '
-         emerge --sync &&
-         emerge -uDUav --changed-deps --verbose-conflicts @world &&
-         emerge -av @preserved-rebuild
-    '
+            emerge --sync &&
+            emerge -uDUav --changed-deps --verbose-conflicts @world &&
+            emerge -av @preserved-rebuild
+        '
     else
         panic "Do not know how to upgrade $ID"
     fi
