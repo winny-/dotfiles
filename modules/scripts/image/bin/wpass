@@ -17,15 +17,27 @@ err() {
     exit 1
 }
 
+terminalcheck() {
+    local what
+    if [[ $# -gt 1 ]]; then
+        what="$*"
+    else
+        what='wpass'
+    fi
+    [[ -t 0 ]] || err "${what}: STDIN is not the terminal."
+}
+
 cmd=default
 best_username=(login email)
+copied=no
 
-dirty=()
+workdir="$(mktemp -t -d wpass.XXXXXXXXXXXXXXX)"
 
 cleanup() {
-    for path in "${dirty[@]}"; do
-        rm -f "$path"
-    done
+    rm -rf "$workdir"
+    if [[ $copied != no ]]; then
+        echo | clip
+    fi
 }
 
 trap cleanup EXIT
@@ -38,13 +50,13 @@ clip() {
         printf '%s' "$temp" | xclip -in -selection primary
         printf '%s' "$temp" | xclip -in -selection clipboard
     elif [[ ${TMUX+set} ]]; then
-        f="$(mktemp -t XXXXXXXXXX.wpass)"
-        dirty+=("$f")
+        f="$workdir/tmux.buffer"
         cat > "$f"
         tmux load-buffer "$f"
     else
         err "Don't know how to set clipboard in environment!"
     fi
+    copied=yes
 }
 
 entries() {
@@ -53,7 +65,7 @@ entries() {
 }
 
 find() {
-    [[ -t 0 ]] || err 'wpass find: STDIN is not the terminal.'
+    terminalcheck 'wpass find'
     if command -v fzf &>/dev/null; then
         entries |
             fzf --history="$pref_dir/fzf.history" \
@@ -63,7 +75,7 @@ find() {
         (
             IFS=$'\n'
             select choice in $(entries); do
-                echo $choice
+                echo "$choice"
                 break
             done
         )
@@ -112,7 +124,6 @@ copyboth() {
     awk 'NR == 1' <<< "$entry" | clip
     echo -n "COPIED Password.  Type RETURN to clear clipboard."
     read -r
-    clip < /dev/null
 }
 
 default() {
