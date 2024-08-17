@@ -141,11 +141,54 @@ show() {
     "$PAGER" <<< "$entry"
 }
 
+insert() {
+    local path
+    if [[ $# -ge 1 ]]; then
+        path="$1"
+    else
+        read -r -p 'Path? ' path
+    fi
+    local editdir base editfile
+    editdir="${workdir}/${path%%/*}"
+    base="${path##*/}"
+    editfile="${editdir}/${base}"
+    mkdir -p "$editdir"
+
+    local password
+    password="$(pwgen -r '#(){}[]' 30 1 -yn)"
+    cat > "$editfile"  <<EOF
+# All lines starting with "#" will be omitted!
+$password
+login:
+# email:
+EOF
+    local orig
+    orig="${editfile}.orig"
+    cp "$editfile" "$orig"
+
+    emacs -Q -nw "$editfile"
+    clean_entry < "$orig" > "${orig}.cleaned"
+    clean_entry < "$editfile" > "${editfile}.cleaned"
+    if cmp -s "$orig" "$editfile"; then
+        err 'Edit buffer unchnaged, not inserting entry.'
+    fi
+    pass insert -m "$path" < "${editfile}.cleaned"
+    copyboth "$path"
+}
+
+clean_entry() {
+    awk '
+! /^[[:space:]]*#/ { print }
+'
+}
+
+
 usage() {
     cat <<EOF
 wpass show [entry]      # Show the entry with a pager
 wpass copyboth [entry]  # Copy username and password to clipboard
 wpass find              # Find an entry and print the path to stdout
+wpass insert [entry]    # Insert an entry to the database
 wpass [--] [entry]      # Defaults to "wpass copyboth [entry]"
 EOF
     exit
@@ -155,7 +198,7 @@ if [[ $# -lt 1 ]]; then
     cmd=default
 else
     case "$1" in
-        show|copyboth|find)
+        show|copyboth|find|insert)
             cmd="$1"
             shift
             ;;
