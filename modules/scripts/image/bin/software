@@ -14,10 +14,11 @@ panic() {
 
 usage() {
     cat <<EOF
-software          # upgrade software
-software upgrade  # upgrade software
-software cleanup  # clean up after successful reboot
-softwrae firmware # upgrade firmware
+software            # upgrade software
+software upgrade    # upgrade software
+software cleanup    # clean up after successful reboot
+software firmware   # upgrade firmware
+software everything # upgrade, firmware, cleanup in order
 EOF
 }
 
@@ -103,6 +104,12 @@ do_firmware() {
         panic "fwupdmgr update failed with code $code"
     fi
     set -e
+}
+
+do_everything() {
+    do_upgrade
+    do_firmware
+    do_cleanup
 }
 
 cmd=upgrade
