@@ -8,8 +8,20 @@
 set -eu -o pipefail
 
 panic() {
-    printf 'Panic: %s\n' "$*"
+    # See terminfo(5) and tput(1)
+    tput setaf 1 bold
+    printf 'Panic: '
+    tput sgr0
+    tput setaf 1
+    printf '%s\n' "$*"
+    tput sgr0
     exit 1
+}
+
+msg() {
+    tput setaf 2 bold
+    printf '>>> %s\n' "$*"
+    tput sgr0
 }
 
 usage() {
@@ -50,6 +62,7 @@ fi
 
 do_upgrade() {
     if [[ $ID = debian ]]; then
+        msg 'Refreshing Apt lists and installing updates'
         # apt-get update refreshes the available package list.
         # apt-get upgrade installs updates that do NOT temporarily break dependencies nor REMOVE packages.
         # apt-get dist-upgrade installs updates that DO temporarily break dependencies and REMOVE packages.
@@ -62,6 +75,7 @@ do_upgrade() {
         # emerge --sync refreshes the available ebuild list.
         # emerge ... @world upgrades and rebuilds all software that is out of date.
         # emerge ... @preserved-rebuild rebuilds software whose libraries were upgraded from underneath it.
+        msg 'Syncronizing portage, emerging upgrades, and rebuilding old libraries'
         $sudo sh -c '
             emerge --sync &&
             emerge -uDUav --changed-deps --verbose-conflicts @world &&
@@ -72,19 +86,23 @@ do_upgrade() {
     fi
 
     if has_command flatpak; then
+        msg 'Updating flatpaks'
         $sudo flatpak update
     fi
 
     if has_command snap; then
+        msg 'Updating snaps'
         $sudo snap refresh
     fi
 }
 
 do_cleanup() {
     if [[ $ID = debian ]]; then
+        msg 'Removing obsolete packages and autocleaning package cache'
         $sudo apt-get autoremove
         $sudo apt-get autoclean
     elif [[ $ID = gentoo ]]; then
+        msg 'Removing obsolete Gentoo packages'
         $sudo emerge -avc
     else
         panic "Do not know how to cleanup $ID"
@@ -92,6 +110,7 @@ do_cleanup() {
 }
 
 do_firmware() {
+    msg 'Checking for firmware updates'
     set +e
     $sudo fwupdmgr refresh
     code=$?
