@@ -32,8 +32,8 @@ for templated files. Useful for creating/deleting host-specific files.
 ** Module structure
 
 - image/ :: the files to symlink into the homedir.
-- hooks/ :: TODO. should contain =prelink=, =postlink=, =preunlink=,
-            =postunlink=.
+- hooks/install/* :: executable scripts to run after successful stow
+  invocation.
 
 ** License
 

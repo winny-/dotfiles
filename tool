@@ -7,11 +7,33 @@ cd "${0%/*}"  # Project root.
 
 # TODO getopts
 
+msg() {
+    tput bold setaf 2
+    printf '>>> %s\n' "$*"
+    tput sgr0
+}
+
+rundir() {
+    for prog in "$1"/*; do
+        if [[ -x $prog ]]; then
+            msg "Running script $prog ..."
+            ./"$prog"
+        fi
+    done
+}
+
 cmd_install() {
     [[ $# -eq 0 ]] && cmd_usage
     for mod in "$@"; do
-	mod="${mod#modules/}"  # Allow omitting the full path
-	stow  --override='.*' --ignore='\.git' -vv -d "modules/$mod" -t "$HOME" --no-folding image
+	MODULE="${mod#modules/}"  # Allow omitting the full path
+        msg "Installing module $MODULE ..."
+        export MODULE
+        TARGET="$HOME"
+        export TARGET
+        pushd "modules/$MODULE" &>/dev/null
+	stow  --override='.*' --ignore='\.git' -vv -d '.' -t "$TARGET" --no-folding image
+        rundir hooks/install
+        popd &>/dev/null
     done
 }
 
