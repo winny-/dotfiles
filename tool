@@ -7,10 +7,16 @@ cd "${0%/*}"  # Project root.
 
 # TODO getopts
 
+if command -v tput &>/dev/null; then
+    tput='tput'
+else
+    tput=:
+fi
+
 msg() {
-    tput bold setaf 2
+    $tput bold setaf 2
     printf '>>> %s\n' "$*"
-    tput sgr0
+    $tput sgr0
 }
 
 rundir() {
