@@ -7,21 +7,27 @@
 
 set -eu -o pipefail
 
+if command -v tput &>/dev/null; then
+    tput='tput'
+else
+    tput=:
+fi
+
 panic() {
     # See terminfo(5) and tput(1)
-    tput setaf 1 bold
+    $tput setaf 1 bold
     printf 'Panic: '
-    tput sgr0
-    tput setaf 1
+    $tput sgr0
+    $tput setaf 1
     printf '%s\n' "$*"
-    tput sgr0
+    $tput sgr0
     exit 1
 }
 
 msg() {
-    tput setaf 2 bold
+    $tput setaf 2 bold
     printf '>>> %s\n' "$*"
-    tput sgr0
+    $tput sgr0
 }
 
 usage() {
