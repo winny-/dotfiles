@@ -104,6 +104,19 @@ path_or_find() {
     fi
 }
 
+return_or_timeout() {
+    local timeout code
+    code=0
+    timeout=60
+    read -r -t $timeout || code=$?
+    if ((code > 128)); then
+        echo
+        err "$timeout seconds exceeded.  Exiting."
+    elif ((code > 0)); then
+        exit $code
+    fi
+}
+
 copyboth() {
     local entry username path
     path="$(path_or_find "$@")"
@@ -120,10 +133,10 @@ copyboth() {
     [[ -z $username ]] && err "Did not find username, giving up."
     clip <<< "$username"
     echo -n 'COPIED Username.  Type RETURN to continue.'
-    read -r
+    return_or_timeout
     awk 'NR == 1' <<< "$entry" | clip
     echo -n "COPIED Password.  Type RETURN to clear clipboard."
-    read -r
+    return_or_timeout
 }
 
 default() {
