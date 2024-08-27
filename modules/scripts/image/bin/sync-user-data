@@ -1,0 +1,42 @@
+#!/usr/bin/env python
+
+import yaml
+try:
+    from yaml import CLoader as Loader, CDumper as Dumper
+except ImportError:
+    from yaml import Loader, Dumper
+
+from pathlib import Path
+from xdg import BaseDirectory
+import subprocess
+import click
+import os
+
+
+@click.command()
+def main():
+    resource = 'sync-user-data'
+    cfgpath = Path(BaseDirectory.save_config_path(resource)) / f"{resource}.yaml"
+    cfg = {}
+    try:
+        with open(cfgpath) as f:
+            cfg = yaml.load(f, Loader=Loader)
+    except FileNotFoundError as ex:
+        click.echo(f"Could not load {cfgpath}: {ex.strerror}", err=True)
+        exit(1)
+    for repo in cfg.get('repos', []):
+        print(f'GIT: {repo}')
+        os.chdir(Path.home() / repo)
+        subprocess.run("git pull --recurse-submodules".split(" "))
+
+    for command in cfg.get('commands', []):
+        os.chdir(Path.home())
+        click.echo(f"CMD: {command}")
+        completed = subprocess.run(command, shell=True)
+        match completed.returncode:
+            case code if code > 0:
+                exit(code)
+
+
+if __name__ == '__main__':
+    main()

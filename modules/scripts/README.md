@@ -1,6 +1,6 @@
 # Scripts
 
-Almost all the scripts are written in `bash`.
+Most scripts are written in `bash`.  Others in Perl or Python.
 
 ## `wpass`
 
@@ -79,3 +79,27 @@ repository.
 ### Dependencies
 
 Read the script it's thing.
+
+## `sync-user-data`
+
+Syncronize user configuration comprised of git repos and actions to perform
+afterwards.
+
+Example `~/.config/sync-user-data/sync-user-data.yaml`:
+
+```yaml
+# All paths are relative to homedir.
+repos:
+  - p/dotfiles
+  - p/debian-for-winny
+  - .emacs.d
+  - .password-store
+commands:
+  - cd p/dotfiles && make install  # Update user configuration
+  - cd p/debian-for-winny && make  # Update host configuration
+  - software everything  # Update host OS
+```
+
+### Dependencies
+
+Python3 and `pyyaml xdg click` Python packages.
