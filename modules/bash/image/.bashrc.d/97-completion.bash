@@ -1,6 +1,7 @@
 # Try to set up bash completion if it hasn't been set up already.  Needed for
 # Debian.
 if [[ -z $(complete -p) && -f /etc/bash_completion ]]; then
+    # shellcheck disable=SC1091
     . /etc/bash_completion
 fi
 
