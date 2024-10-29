@@ -33,6 +33,11 @@ __prompt_command() {
         fi
     fi
 
+    if [[ ${VIRTUAL_ENV+set} ]]; then
+        PS1+="(${VIRTUAL_ENV_PROMPT:-${VIRTUAL_ENV##*/}}) "
+    fi
+
+
     if [[ $__use_color ]]; then
 	if [[ ${EUID} == 0 ]] ; then
 	    PS1+='\[\033[01;31m\]\h\[\033[01;34m\] \w \$\[\033[00m\] '
