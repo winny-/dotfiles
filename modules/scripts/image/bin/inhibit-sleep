@@ -1,0 +1,16 @@
+#!/usr/bin/env perl
+
+=head1
+
+Inhibit sleep on device.
+
+=cut
+
+use strict;
+use warnings;
+
+my $time = $1 || '1h';
+
+my $command = qq(systemd-inhibit --what=idle:sleep --who=inhibit-sleep bash -c "sleep $time");
+
+system $command;
