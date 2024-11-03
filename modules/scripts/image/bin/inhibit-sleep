@@ -11,6 +11,15 @@ use warnings;
 
 my $time = $1 || '1h';
 
-my $command = qq(systemd-inhibit --what=idle:sleep --who=inhibit-sleep bash -c "sleep $time");
+# SYSTEMD_LOG_LEVEL=crit suppresses an error message if the bash process is
+# interrupted (^C).
+my @command = split /\n *| +/, (<<EOF
+env SYSTEMD_LOG_LEVEL=crit
+systemd-inhibit
+--what=idle:sleep --who=inhibit-sleep
+bash -c
+EOF
+    );
+push @command, "sleep $time";
 
-system $command;
+exec @command;
