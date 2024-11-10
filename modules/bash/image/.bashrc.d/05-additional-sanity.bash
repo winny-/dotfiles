@@ -10,3 +10,6 @@ shopt -s no_empty_cmd_completion
 # is under duress, or lives somewhere flaky (like NFS).  Constantly syncing
 # the history will halt the shell prompt until it's finished.
 #PROMPT_COMMAND='history -a'
+
+# CDPATH is a footgun, clear it.
+export CDPATH=
