@@ -22,4 +22,6 @@ EOF
     );
 push @command, "sleep $time";
 
+print "Inhibiting sleep for ${time} ...\n";
+
 exec @command;
