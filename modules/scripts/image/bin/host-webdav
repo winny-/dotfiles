@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+# My Kobo runs KOReader.  Set up KOReader's Cloud Storage with the WebDAV URL
+# that this script prints out.  Then access the books to read over WebDAV.
+# Works as a dead simple file server too.  Opens up firewalld because I always
+# forget the incantation.
+
+set -eu -o pipefail
+
+open_firewall() {
+    sudo firewall-cmd --zone="$(firewall-cmd --get-default)" \
+         --add-port=8080/tcp --permanent
+    sudo firewall-cmd --reload
+}
+
+close_firewall() {
+    sudo firewall-cmd --zone="$(firewall-cmd --get-default)" \
+         --remove-port=8080/tcp --permanent
+    sudo firewall-cmd --reload
+}
+
+
+root=.
+if [[ $# -gt 0 ]]; then
+    root="$1"
+fi
+
+exiting() { close_firewall; }
+trap exiting EXIT
+
+open_firewall
+echo
+printf 'Direct your webdav client to any of '
+
+ips=$(
+    ip address show |
+        awk '
+match($0, /^\s+inet6?\s+(\S+)\s+.*scope global\s+/, ary) &&
+!/docker|virbr/ {
+    sub(/\/.*/, "", ary[1])
+    print ary[1]
+}'
+   )
+
+# shellcheck disable=SC2086
+printf 'http://%s:8080/ ' $ips
+echo
+echo
+rclone serve webdav --addr :8080 --verbose "$root"
