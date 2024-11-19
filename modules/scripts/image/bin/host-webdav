@@ -9,13 +9,10 @@ set -eu -o pipefail
 
 open_firewall() {
     sudo firewall-cmd --zone="$(firewall-cmd --get-default)" \
-         --add-port=8080/tcp --permanent
-    sudo firewall-cmd --reload
+         --add-port=8080/tcp
 }
 
 close_firewall() {
-    sudo firewall-cmd --zone="$(firewall-cmd --get-default)" \
-         --remove-port=8080/tcp --permanent
     sudo firewall-cmd --reload
 }
 
@@ -46,4 +43,4 @@ match($0, /^\s+inet6?\s+(\S+)\s+.*scope global\s+/, ary) &&
 printf 'http://%s:8080/ ' $ips
 echo
 echo
-rclone serve webdav --addr :8080 --verbose "$root"
+rclone serve webdav -L --addr :8080 --verbose "$root"
