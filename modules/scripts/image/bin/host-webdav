@@ -26,8 +26,6 @@ exiting() { close_firewall; }
 trap exiting EXIT
 
 open_firewall
-echo
-printf 'Direct your webdav client to any of '
 
 ips=$(
     ip address show |
@@ -39,8 +37,19 @@ match($0, /^\s+inet6?\s+(\S+)\s+.*scope global\s+/, ary) &&
 }'
    )
 
+echo
+printf 'Direct your webdav client to any of '
 # shellcheck disable=SC2086
 printf 'http://%s:8080/ ' $ips
 echo
 echo
-rclone serve webdav -L --addr :8080 --verbose "$root"
+
+declare -a rclone_args
+rclone_args=(
+    -L  # deref symlinks
+    --poll-interval 5s  # Faster poll interval
+    --read-only
+    --addr :8080  # All interfaces on TCP 8080
+    --verbose  # Logs to stdout
+)
+rclone serve webdav "${rclone_args[@]}" "$root"
