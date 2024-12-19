@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+#
+# Adapted from
+# https://www.reddit.com/r/kde/comments/176yfir/kde_auto_switch_light_to_dark_color_schemes_night/
+
+set -eu -o pipefail
+
+export LANG=C.UTF-8
+
+if [[ $# -gt 0 ]]; then
+    if [[ $1 != -* && $1 =~ light|dark|auto ]]; then
+        scheme="$1"
+    else
+        echo 'lightdark [light|dark|auto]'
+        echo
+        echo 'Switch between light or dark mode.  Defaults to auto.'
+        exit 1
+    fi
+else
+    scheme=auto
+fi
+
+hhmm=$(date +%H:%M)
+
+if [[ $scheme = auto ]]; then
+    # Note the leading zero.
+    if [[ $hhmm > 18:00 || $hhmm < 07:00 ]]; then
+        scheme=dark
+    else
+        scheme=light
+    fi
+fi
+
+case $scheme in
+    light)
+        want=BreezeLight
+        ;;
+    dark)
+        want=BreezeDark
+        ;;
+    *)
+        echo "Do not know what to do with scheme=$scheme" >&2
+        exit 1
+        ;;
+esac
+
+theme=$(plasma-apply-colorscheme --list-schemes |
+            awk 'match($0, /^ \* ([^ ]+) \(current color scheme\)/, ary) { print ary[1]; }')
+if [[ $want != "$theme" ]]; then
+    plasma-apply-colorscheme "$want" &> /dev/null
+    if [[ $scheme = dark ]]; then
+        icon_theme=breeze-dark
+    else
+        icon_theme=breeze
+    fi
+    /usr/lib/x86_64-linux-gnu/libexec/plasma-changeicons "$icon_theme"
+fi
