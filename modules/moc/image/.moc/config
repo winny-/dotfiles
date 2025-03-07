@@ -1,0 +1,11 @@
+# -*- mode: conf; -*-
+# c.f. /usr/share/doc/moc/examples/config.example
+
+Theme = darkdot_theme
+XTerms += tmux
+XTerms += tmux-256color
+XTerms += alacritty
+Fastdir1 = /home/winston/mnt/silo/multimedia/music
+Fastdir2 = /home/winston/media
+Fastdir3 = /home/winston/Downloads
+TagsCacheSize = 1024
