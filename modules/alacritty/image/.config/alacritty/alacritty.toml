@@ -1,7 +1,7 @@
 import = [
        "~/.config/alacritty/local.toml",
        "~/.config/alacritty/local.yml",
-       "~/.config/alacritty/winny-theme.toml",
+       "~/.config/alacritty/current-theme.toml",
 ]
 
 [colors]

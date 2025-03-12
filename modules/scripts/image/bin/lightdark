@@ -3,7 +3,7 @@
 # Adapted from
 # https://www.reddit.com/r/kde/comments/176yfir/kde_auto_switch_light_to_dark_color_schemes_night/
 
-set -eu -o pipefail
+set -eu -o pipefail -x
 
 export LANG=C.UTF-8
 
@@ -43,6 +43,13 @@ case $scheme in
         exit 1
         ;;
 esac
+
+symlink="$HOME/.config/alacritty/current-theme.toml"
+tgt="${scheme}-theme.toml"
+if ! dest=$(readlink -f "$symlink") || ! [[ -f $dest ]] || [[ $tgt != "${dest##*/}" ]]; then
+    ln -sf "$tgt" "$symlink"
+fi
+
 
 theme=$(plasma-apply-colorscheme --list-schemes |
             awk 'match($0, /^ \* ([^ ]+) \(current color scheme\)/, ary) { print ary[1]; }')
