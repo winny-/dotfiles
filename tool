@@ -32,10 +32,9 @@ cmd_install() {
     [[ $# -eq 0 ]] && cmd_usage
     for mod in "$@"; do
 	MODULE="${mod#modules/}"  # Allow omitting the full path
-        msg "Installing module $MODULE ..."
-        export MODULE
         TARGET="$HOME"
-        export TARGET
+        export MODULE TARGET  # Variables usable in rundir
+        msg "Installing module $MODULE ..."
         pushd "modules/$MODULE" &>/dev/null
 	stow  --override='.*' --ignore='\.git' -vv -d '.' -t "$TARGET" --no-folding image
         rundir hooks/install
