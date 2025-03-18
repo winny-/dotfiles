@@ -1,7 +1,14 @@
 #+startup: indent
 * winny's dotfiles
 
-Not much to see here yet. I link stuff in with:
+[[file:misc/winny-dotfiles.png]]
+
+[[https://www.gnu.org/software/stow/][GNU Stow]] powered dotfiles.  Keep it simple, keep it easy to manage.  But don't
+keep it [[https://drewdevault.com/2019/12/30/dotfiles.html][too simple]], for I need host-specific file support (same filename,
+different content across many hosts) and script execution after successful Stow
+invocations.
+
+I link stuff in with:
 
 #+BEGIN_SRC sh
   ./tool install MODNAME
@@ -10,30 +17,86 @@ Not much to see here yet. I link stuff in with:
 Or if you're feeling ballsy you can link everything at once:
 
 #+BEGIN_SRC sh
+  make install
+  # Or if your GNU Make is too old:
   ./tool install modules/*
 #+END_SRC
 
-** See also
+** Project structure
 
-- [[https://github.com/winny-/configs][My old configs repository]]
-- [[https://gitlab.com/winny-gentoo-ops][My Gentoo configs]]
-
-** Extension ideas
-
-*** Add pre/post-link and pre/post-unlink hooks
-
-Useful for fixing permissions (e.g. =.ssh= should be =0700=). Useful
-for templated files. Useful for creating/deleting host-specific files.
-
-** Folder structure
-
-- modules/ :: the modularized configs. Each module is a directory.
+- modules/ :: the modularized configs.  Each module is a directory that follows
+  the module structure layout.  Browse available modules [[file:modules/][here]].
 
 ** Module structure
 
 - image/ :: the files to symlink into the homedir.
 - hooks/install/* :: executable scripts to run after successful stow
   invocation.
+- README.md :: describe the module's scope, dependencies and caveats.
+
+** Hooks
+
+Useful for fixing permissions (e.g. =.ssh= should be =0700=).  Useful for
+templated files.  Useful for creating/deleting host-specific files.
+
+*** Hook variables
+
+The following environment variables are available from hook scripts:
+
+- =TARGET= :: where files are installed to, i.e. your =$HOME= (=~/=).
+- =MODULE= :: The module folder name, e.g. =tmux=, =alacritty=, =bash=.
+
+*** Install hook
+
+Drop an executable file into the module's =hooks/install/= folder then rerun
+=./tool install modname=.
+
+*** Examples
+
+- Set up host specific =mpv= configuration file ([[file:modules/mpv/hooks/install/ensure-platform-conf-exits.sh][link]]).
+- Set up a symlink for Alacritty's automatic dark/light mode support ([[file:modules/alacritty/hooks/install/ensure-valid-theme-symlink.bash][link]]).
+
+** Wishlist
+
+*** Add complete pre/post-link and pre/post-unlink hooks
+
+In addition to the present "run hook after install" or "post-link" hook,
+pre-link and pre/post-unlink hooks may have utility.  Wait and see.  Implement
+when a need is found.
+
+*** Rewrite =tool= in Perl 5
+
+Rewrite =tool= in Perl 5 and use the GNU Stow API directly.  Allow for easier
+maintenance in future.
+
+** FQA (Frequently questioned answers)
+
+*** Why not home-manager?
+
+1. It depends on the nix ecosystem and thereby limits target deployment
+   environments severely.
+2. More abstractions mean more stuff to learn and keep in mind when working on
+   this project.  *Excessive cognitive burden is a self-inflicted curse
+   experienced many computer users.* I should not buckle under the loading of
+   my personal dotfiles project.
+3. nix is designed by [[https://en.wikipedia.org/wiki/Extremely_online][terminally online]] computer fans who don't understand that
+   sometimes you just want the thing to work without Internet access.
+4. [[https://en.wikipedia.org/wiki/Appeal_to_novelty][Just because something is shiny doesn't make it good or smart]].
+
+*** Why not do X or Y or Z?
+
+[[https://imgs.xkcd.com/comics/standards.png]]
+
+Probably works good.  Try it for yourself!
+
+** See also
+
+- [[https://github.com/winny-/debian-for-winny][My "debian-for-winny" configuration]]
+- [[https://github.com/winny-/emacs.d][My .emacs.d repository]] replete with a [[https://github.com/winny-/emacs.d/blob/master/configuration.org][literate configuration]]
+- Old stuff
+  + [[https://github.com/winny-/configs][My old configs repository]]
+  + [[https://gitlab.com/winny-gentoo-ops][My old Gentoo configs]]
+  + [[https://gitlab.com/winny/nixos-configs][My old NixOS configs]]
 
 ** License
 
