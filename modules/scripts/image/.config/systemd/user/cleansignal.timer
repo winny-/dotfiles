@@ -1,0 +1,9 @@
+[Unit]
+Description=Clean Signal temporary files every hour
+Documentation=https://github.com/flathub/org.signal.Signal/issues/751
+
+[Timer]
+OnCalendar=hourly
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# https://github.com/flathub/org.signal.Signal/issues/751
+set -eu -o pipefail
+dir="/run/user/$(id -u)/app/org.signal.Signal/"
+if [[ ! -d $dir ]]; then
+    exit
+fi
+find "$dir" -name '.org.chromium.Chromium.*' |
+    while read -r tempfile; do
+        if [[ ! $(lsof -t "$tempfile") ]]; then
+            rm -f "$tempfile"
+        fi
+    done

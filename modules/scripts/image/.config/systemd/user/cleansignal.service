@@ -1,0 +1,7 @@
+[Unit]
+Description=Clean Signal temporary files
+Documentation=https://github.com/flathub/org.signal.Signal/issues/751
+
+[Service]
+Type=oneshot
+ExecStart=%h/bin/cleansignal
