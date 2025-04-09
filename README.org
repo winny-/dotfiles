@@ -27,7 +27,10 @@ Or if you're feeling ballsy you can link everything at once:
 - modules/ :: the modularized configs.  Each module is a directory that follows
   the module structure layout.  Browse available modules [[file:modules/][here]].
 
-** Module structure
+*** Module structure
+
+Each module is a directory tree installable via =./tool install MODNAME=.  The
+module's directory [[man:basename(3)][basename]] doubles up as the module's name.
 
 - image/ :: the files to symlink into the homedir.
 - hooks/install/* :: executable scripts to run after successful stow
@@ -36,8 +39,9 @@ Or if you're feeling ballsy you can link everything at once:
 
 ** Hooks
 
-Useful for fixing permissions (e.g. =.ssh= should be =0700=).  Useful for
-templated files.  Useful for creating/deleting host-specific files.
+Little bits of code ran during =./tool= operations.  These code clippings
+are useful for fixing permissions (e.g. =.ssh= should be =0700=).  Could also
+manage out host-specific files.
 
 *** Hook variables
 
@@ -83,6 +87,14 @@ maintenance in future.
    sometimes you just want the thing to work without Internet access.
 4. [[https://en.wikipedia.org/wiki/Appeal_to_novelty][Just because something is shiny doesn't make it good or smart]].
 
+*** How to ignore files?
+
+It depends.  Review out a couple examples.
+
+- [[file:modules/mg/.gitignore]] ([[man:gitignore(5)][see manpage]])
+- [[file:modules/mpv/.gitignore]]
+- [[file:modules/scripts/image/.stow-local-ignore]] ([[info:stow:Types And Syntax Of Ignore Lists][see infopage]])
+
 *** Why not do X or Y or Z?
 
 [[https://imgs.xkcd.com/comics/standards.png]]
@@ -94,6 +106,7 @@ Probably works good.  Try it for yourself!
 - [[https://github.com/winny-/debian-for-winny][My "debian-for-winny" configuration]]
 - [[https://github.com/winny-/emacs.d][My .emacs.d repository]] replete with a [[https://github.com/winny-/emacs.d/blob/master/configuration.org][literate configuration]]
 - Old stuff
+  + [[https://gitlab.com/winny/awesome-cfg][My old Awesome WM desktop inspired by Stump WM]]
   + [[https://github.com/winny-/configs][My old configs repository]]
   + [[https://gitlab.com/winny-gentoo-ops][My old Gentoo configs]]
   + [[https://gitlab.com/winny/nixos-configs][My old NixOS configs]]
