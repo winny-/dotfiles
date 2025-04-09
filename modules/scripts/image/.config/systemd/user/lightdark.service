@@ -1,0 +1,6 @@
+[Unit]
+Description=Automatically set light or dark mode
+
+[Service]
+Type=oneshot
+ExecStart=%h/bin/lightdark

@@ -1,6 +1,7 @@
 # Scripts
 
-Most scripts are written in `bash`.  Others in Perl or Python.
+Most scripts are written in `bash`.  Others in Perl or Python.  Some scripts
+include SystemD services.
 
 ## `wpass`
 
@@ -103,3 +104,34 @@ commands:
 ### Dependencies
 
 Python3 and `pyyaml xdg click` Python packages.
+
+## `cleansignal`
+
+Work around https://github.com/flathub/org.signal.Signal/issues/751
+
+### Dependencies
+
+lsof
+
+### Run hourly
+
+It's automatically enabled [1], but if it didn't work
+try:
+
+```bash
+systemctl enable cleansignal.timer
+```
+
+[1]: hooks/install/systemd.bash
+
+## `lightdark`
+
+### Dependencies
+
+Bash, KDE, using the Breeze light and dark themes, alacritty.
+
+### Run hourly
+
+```bash
+systemctl enable lightdark.timer
+```

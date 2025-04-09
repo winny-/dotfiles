@@ -1,0 +1,8 @@
+[Unit]
+Description=Automatically set light or dark mode
+
+[Timer]
+OnCalendar=hourly
+
+[Install]
+WantedBy=timers.target
