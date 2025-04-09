@@ -105,6 +105,7 @@ Probably works good.  Try it for yourself!
 
 - [[https://github.com/winny-/debian-for-winny][My "debian-for-winny" configuration]]
 - [[https://github.com/winny-/emacs.d][My .emacs.d repository]] replete with a [[https://github.com/winny-/emacs.d/blob/master/configuration.org][literate configuration]]
+- [[https://gitlab.com/winny/browser-bits/-/tree/main][My "Browser Bits" repository]] for userscripts and other goodies
 - Old stuff
   + [[https://gitlab.com/winny/awesome-cfg][My old Awesome WM desktop inspired by Stump WM]]
   + [[https://github.com/winny-/configs][My old configs repository]]
