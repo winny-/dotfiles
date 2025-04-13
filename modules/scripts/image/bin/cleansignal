@@ -1,13 +1,44 @@
-#!/usr/bin/env bash
-# https://github.com/flathub/org.signal.Signal/issues/751
-set -eu -o pipefail
-dir="/run/user/$(id -u)/app/org.signal.Signal/"
-if [[ ! -d $dir ]]; then
-    exit
-fi
-find "$dir" -name '.org.chromium.Chromium.*' |
-    while read -r tempfile; do
-        if [[ ! $(lsof -t "$tempfile") ]]; then
-            rm -f "$tempfile"
-        fi
-    done
+#!/usr/bin/env python3
+"""
+apt install python3-sh python3-xdg
+"""
+
+import click
+from pathlib import Path
+import xdg
+import sh
+from io import StringIO
+
+
+@click.command()
+@click.option('--dry-run', '-n', is_flag=True, default=False,
+              help='Dry run (show what would be deleted, do nothing)')
+def cleansignal(dry_run):
+    """Clean Signal's stale temporary files in XDG_RUNTIME_DIR because a full
+    XDG_RUNTIME_DIR causes myriad problems.
+
+    See https://github.com/flathub/org.signal.Signal/issues/751
+
+    """
+    signal_tempdir = xdg.XDG_RUNTIME_DIR / "app/org.signal.Signal"
+    if not signal_tempdir.is_dir():
+        exit(0)
+    candidates = [str(c) for c in
+                  signal_tempdir.glob('.org.chromium.Chromium.*')]
+    stdout = StringIO()
+    sh.lsof("-Fn", "-w", *candidates, _out=stdout, _ok_code=(0, 1))
+    for line in stdout.getvalue().split('\n'):
+        field = line[0:1]
+        if field != 'n':
+            continue
+        name = line[1:]
+        candidates.remove(name)
+    for tempfile in candidates:
+        if dry_run:
+            click.echo(f'Would delete: {tempfile}')
+        else:
+            Path(tempfile).unlink()
+
+
+if __name__ == '__main__':
+    cleansignal()

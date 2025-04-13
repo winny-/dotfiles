@@ -111,7 +111,7 @@ Work around https://github.com/flathub/org.signal.Signal/issues/751
 
 ### Dependencies
 
-lsof
+lsof, Python3, `xdg click sh` Python packages.
 
 ### Run hourly
 
