@@ -135,3 +135,11 @@ Bash, KDE, using the Breeze light and dark themes, alacritty.
 ```bash
 systemctl enable lightdark.timer
 ```
+
+## `serve-webdav`
+
+Host a read-only HTTP WEBDAV fileserver.  Helpful for KOReader.
+
+### Dependencies
+
+Python3 and the `click` Python package.
