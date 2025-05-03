@@ -1,0 +1,37 @@
+#!/usr/bin/perl
+
+=head1
+
+Randomized study case script.  Mostly ChatGPT generated.
+https://chatgpt.com/share/68169cb0-8d54-800d-ac44-e589de7c149b
+https://en.wikipedia.org/wiki/Alternating_caps
+
+=cut
+
+use strict;
+use warnings;
+use utf8;
+use open ':std', ':encoding(UTF-8)'; # handle UTF-8 safely
+use List::Util 'shuffle';
+
+# If there are command-line args, treat them as the input
+if (@ARGV) {
+    print studly(join(' ', @ARGV)), "\n";
+} else {
+    # Process STDIN line by line to avoid loading everything into memory
+    while (my $line = <STDIN>) {
+        print studly($line);
+    }
+}
+
+sub studly {
+    my ($text) = @_;
+    my $out = '';
+    foreach my $char (split //, $text) {
+        if ($char =~ /[A-Za-z]/) {
+            $char = (int(rand(2)) == 0) ? lc($char) : uc($char);
+        }
+        $out .= $char;
+    }
+    return $out;
+}

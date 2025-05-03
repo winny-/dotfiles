@@ -135,3 +135,9 @@ Bash, KDE, using the Breeze light and dark themes, alacritty.
 ```bash
 systemctl enable lightdark.timer
 ```
+
+## `studly` - randomize text upper/lowercase
+
+### Dependencies
+
+Perl 5.
