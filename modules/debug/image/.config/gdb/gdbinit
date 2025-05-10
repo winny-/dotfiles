@@ -1,0 +1,4 @@
+# -*- mode: gdb-script; -*-
+alias D = disassemble
+set extended-prompt \[\e[92m\](gdb)\[\e[0m\] 
+set history save on
