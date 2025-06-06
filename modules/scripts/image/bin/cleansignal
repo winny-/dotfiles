@@ -13,7 +13,9 @@ from io import StringIO
 @click.command()
 @click.option('--dry-run', '-n', is_flag=True, default=False,
               help='Dry run (show what would be deleted, do nothing)')
-def cleansignal(dry_run):
+@click.option('--savings', '-s', is_flag=True, default=False,
+              help='Print out space savings to stdout')
+def cleansignal(dry_run, savings):
     """Clean Signal's stale temporary files in XDG_RUNTIME_DIR because a full
     XDG_RUNTIME_DIR causes myriad problems.
 
@@ -33,6 +35,11 @@ def cleansignal(dry_run):
             continue
         name = line[1:]
         candidates.remove(name)
+    if savings:
+        bytes = sh.awk('/./ { size+=$1 } END { print size }',
+                       _in=sh.du('-sb', *candidates))
+        size = round(int(bytes / (1024**2), 2))
+        click.echo(f'Total cleanup size: {size} MB')
     for tempfile in candidates:
         if dry_run:
             click.echo(f'Would delete: {tempfile}')
