@@ -1,0 +1,55 @@
+#!/usr/bin/env python3
+"""
+Find out what driver is responsible for the file
+"""
+
+
+import click
+from pathlib import Path
+import sh
+import os
+import os.path as path
+import stat
+from enum import Enum
+
+
+class DeviceKind(Enum):
+    BLOCK = 1
+    CHAR = 2
+
+
+@click.command()
+@click.argument('file',
+                type=click.Path(exists=True, path_type=Path, readable=False))
+def whatdriver(file, code=1):
+    def panic(msg):
+        click.echo(msg, err=True)
+        exit(code)
+    st = os.stat(file)
+    kind = None
+    if stat.S_ISBLK(st.st_mode):
+        kind = DeviceKind.BLOCK
+    elif stat.S_ISCHR(st.st_mode):
+        kind = DeviceKind.CHAR
+    else:
+        panic(f'{file} is not a device file.  Giving up.')
+    major = os.major(st.st_rdev)
+    minor = os.minor(st.st_rdev)
+    major_minor = f'{major}:{minor}'
+    syspath = None
+    match kind:
+        case DeviceKind.BLOCK:
+            syspath = Path('/sys/dev/block') / major_minor
+        case DeviceKind.CHAR:
+            syspath = Path('/sys/dev/char') / major_minor
+        case _:
+            panic('Unknown device kind f{kind}')
+    subsystem = (syspath / 'subsystem').readlink()
+    click.echo(f"""{file}
+  TYPE      {kind.name}
+  MAJ:MIN   {major_minor}
+  SUBSYSTEM {path.basename(subsystem)}""")
+
+
+if __name__ == '__main__':
+    whatdriver()

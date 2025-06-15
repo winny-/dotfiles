@@ -143,6 +143,10 @@ default() {
     copyboth "$@"
 }
 
+edit() {
+    err "Not implemented"
+}
+
 show() {
     local entry path
     path="$(path_or_find "$@")"
@@ -202,6 +206,7 @@ wpass show [entry]      # Show the entry with a pager
 wpass copyboth [entry]  # Copy username and password to clipboard
 wpass find              # Find an entry and print the path to stdout
 wpass insert [entry]    # Insert an entry to the database
+wpass edit [entry]      # Edit entry
 wpass [--] [entry]      # Defaults to "wpass copyboth [entry]"
 EOF
     exit
@@ -211,7 +216,7 @@ if [[ $# -lt 1 ]]; then
     cmd=default
 else
     case "$1" in
-        show|copyboth|find|insert)
+        show|copyboth|find|insert|edit)
             cmd="$1"
             shift
             ;;

@@ -1,4 +1,8 @@
-# status colors
+# See
+# - https://nethackwiki.com/wiki/Options
+# - /usr/share/doc/nethack-common/Guidebook.txt.gz
+
+## status colors
 #OPTIONS=hilite_status:hitpoints/50%/red/green
 #OPTIONS=hilite_status:hunger/50%/red/normal     #not working?
 #OPTIONS=hilite_status:power/20%/red/normal
@@ -76,6 +80,10 @@ SYMBOLS=S_ghost:X
 
 ## Require explicit yes for some prompts
 OPTIONS=paranoid_confirmation:Confirm quit attack pray wand
+
+## Confirm before pickup
+# https://nethackwiki.com/wiki/Options#pickup_burden
+OPTIONS=pickup_burden=U
 
 ## Conducts
 #OPTIONS=nudist

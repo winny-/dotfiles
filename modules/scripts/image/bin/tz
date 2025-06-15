@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -eu -o pipefail
+
+if mkdir -p ~/.config/tz && cd ~/.config/tz &&
+        [[ -r ~/.config/tz/timezones ]]; then
+    mapfile -t timezones < ~/.config/tz/timezones
+else
+    timezones=(/etc/localtime Asia/Kolkata Europe/London Europe/Warsaw)
+fi
+
+while (( $# )); do
+    timezones+=("$1")
+    shift
+done
+
+for tz in "${timezones[@]}"; do
+    if [[ $tz = *localtime* ]]; then
+        tput bold
+    fi
+    env TZ="$tz" date '+%F %R %Z'
+    if [[ $tz = *localtime* ]]; then
+        tput sgr0
+    fi
+done | sort -n

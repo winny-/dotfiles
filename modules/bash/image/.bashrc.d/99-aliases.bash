@@ -1,27 +1,30 @@
+### Coreutils
 alias ls='ls --color=auto'
+alias l='ls -l'
+alias ll='ls -l'
+alias la='l -a'
+# Confirm a stray star, but not a dozen strays.
+alias rm='rm --interactive=once'
+
 alias grep='grep --colour=auto'
 alias egrep='egrep --colour=auto'
 alias fgrep='fgrep --colour=auto'
-alias ls='ls --color=auto'
-alias ll='ls -l'
-alias la='ll -a'
-alias rm='rm --interactive=once'
+
+alias mpvc='mpvc -S ~/.config/mpv/mpv.socket'
 alias g=git
 alias t=tmux
-alias mpvc='mpvc -S ~/.config/mpv/mpv.socket'
-alias hw-probe='sudo -E hw-probe -all -upload -inventory LHW-ADDA-1F0A-C507-1BF1'
 
-alias sysu='systemctl --user'
-alias ju='journalctl --user'
-alias wp='wine-prefix'
+### Operator
+alias sys=systemctl
+alias sysu='sys --user'
+alias j=journalctl
+alias ju='j --user'
+alias d=docker
 alias dc='docker-compose'
 alias h=heroku
 alias fly=flyctl
 alias tf=terraform
-alias pq=portageq
-alias pqp='portageq get_repo_path /'
+alias hw-probe='sudo -E hw-probe -all -upload -inventory LHW-ADDA-1F0A-C507-1BF1'
 
-alias e=emacs
-alias ec=emacsclient
-
+### Literary
 alias d=wdict
