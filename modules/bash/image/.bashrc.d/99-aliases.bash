@@ -10,6 +10,8 @@ alias grep='grep --colour=auto'
 alias egrep='egrep --colour=auto'
 alias fgrep='fgrep --colour=auto'
 
+alias rg='rg -.'  # Stop short of -u.
+
 alias mpvc='mpvc -S ~/.config/mpv/mpv.socket'
 alias g=git
 alias t=tmux
