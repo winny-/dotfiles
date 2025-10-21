@@ -6,6 +6,9 @@
 set -eu -o pipefail
 
 export LANG=C.UTF-8
+sunset=18:00
+sunrise=07:00
+
 
 if [[ $# -gt 0 ]]; then
     if [[ $1 != -* && $1 =~ light|dark|auto ]]; then
@@ -14,6 +17,7 @@ if [[ $# -gt 0 ]]; then
         echo 'lightdark [light|dark|auto]'
         echo
         echo 'Switch between light or dark mode.  Defaults to auto.'
+        echo "(Auto switches on dark mode between $sunset and $sunrise local time.)"
         exit 1
     fi
 else
@@ -23,8 +27,9 @@ fi
 hhmm=$(date +%H:%M)
 
 if [[ $scheme = auto ]]; then
-    # Note the leading zero.
-    if [[ $hhmm > 18:00 || $hhmm < 07:00 ]]; then
+    # < and > operators compare two strings lexicographically (not
+    # numerically!).  As a result, a leading zero is needed.
+    if [[ $hhmm > $sunset || $hhmm < $sunrise ]]; then
         scheme=dark
     else
         scheme=light
@@ -45,11 +50,15 @@ case $scheme in
 esac
 
 symlink="$HOME/.config/alacritty/current-theme.toml"
+alacritty_cfgdir=${symlink%/*}
 tgt="${scheme}-theme.toml"
-if ! dest=$(readlink -f "$symlink") || ! [[ -f $dest ]] || [[ $tgt != "${dest##*/}" ]]; then
+if [[ ! -d $alacritty_cfgdir ]]; then
+    echo "Skipping alacritty support: directory $alacritty_cfgdir does not exist" >&2
+elif [[ ! -f ${alacritty_cfgdir}/$tgt ]]; then
+    echo "Skipping alacritty support: symlink target $tgt does not exist" >&2
+elif ! dest=$(readlink -f "$symlink") || ! [[ -f $dest ]] || [[ $tgt != "${dest##*/}" ]]; then
     ln -sf "$tgt" "$symlink"
 fi
-
 
 theme=$(plasma-apply-colorscheme --list-schemes |
             awk 'match($0, /^ \* ([^ ]+) \(current color scheme\)/, ary) { print ary[1]; }')
