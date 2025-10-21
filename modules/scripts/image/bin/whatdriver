@@ -46,6 +46,7 @@ def whatdriver(file, code=1):
             panic('Unknown device kind f{kind}')
     subsystem = (syspath / 'subsystem').readlink()
     click.echo(f"""{file}
+  SEE       {syspath}
   TYPE      {kind.name}
   MAJ:MIN   {major_minor}
   SUBSYSTEM {path.basename(subsystem)}""")
