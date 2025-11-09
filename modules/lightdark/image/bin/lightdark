@@ -1,73 +1,115 @@
-#!/usr/bin/env bash
-#
-# Adapted from
-# https://www.reddit.com/r/kde/comments/176yfir/kde_auto_switch_light_to_dark_color_schemes_night/
+#!/usr/bin/env python3
+"""Originally adapted from
+https://www.reddit.com/r/kde/comments/176yfir/kde_auto_switch_light_to_dark_color_schemes_night/
+with added Bashisms, then later rewritten in Python.
+"""
+import click
+import re
+import sh
+import os
+from datetime import datetime
+from pathlib import Path
+from io import StringIO
+import enum
 
-set -eu -o pipefail
 
-export LANG=C.UTF-8
-sunset=18:00
-sunrise=07:00
+plasma_apply_colorscheme = sh.Command('plasma-apply-colorscheme')
+plasma_changeicons = sh.Command(
+    # XXX Should not hardcode abspath to libexec.
+    '/usr/lib/x86_64-linux-gnu/libexec/plasma-changeicons'
+)
 
 
-if [[ $# -gt 0 ]]; then
-    if [[ $1 != -* && $1 =~ light|dark|auto ]]; then
-        scheme="$1"
-    else
-        echo 'lightdark [light|dark|auto]'
-        echo
-        echo 'Switch between light or dark mode.  Defaults to auto.'
-        echo "(Auto switches on dark mode between $sunset and $sunrise local time.)"
-        exit 1
-    fi
-else
-    scheme=auto
-fi
+class ColorMode(enum.Enum):
+    LIGHT = enum.auto()
+    DARK = enum.auto()
 
-hhmm=$(date +%H:%M)
 
-if [[ $scheme = auto ]]; then
-    # < and > operators compare two strings lexicographically (not
-    # numerically!).  As a result, a leading zero is needed.
-    if [[ $hhmm > $sunset || $hhmm < $sunrise ]]; then
-        scheme=dark
-    else
-        scheme=light
-    fi
-fi
+def hhmm_today(hhmm: str) -> datetime:
+    """Parse a HH:MM string and return a datetime with today's date and the
+    specified time."""
+    converted = datetime.strptime(hhmm, '%H:%M')
+    return datetime.now().replace(hour=converted.hour,
+                                  minute=converted.minute)
 
-case $scheme in
-    light)
-        want=BreezeLight
-        ;;
-    dark)
-        want=BreezeDark
-        ;;
-    *)
-        echo "Do not know what to do with scheme=$scheme" >&2
-        exit 1
-        ;;
-esac
 
-symlink="$HOME/.config/alacritty/current-theme.toml"
-alacritty_cfgdir=${symlink%/*}
-tgt="${scheme}-theme.toml"
-if [[ ! -d $alacritty_cfgdir ]]; then
-    echo "Skipping alacritty support: directory $alacritty_cfgdir does not exist" >&2
-elif [[ ! -f ${alacritty_cfgdir}/$tgt ]]; then
-    echo "Skipping alacritty support: symlink target $tgt does not exist" >&2
-elif ! dest=$(readlink -f "$symlink") || ! [[ -f $dest ]] || [[ $tgt != "${dest##*/}" ]]; then
-    ln -sf "$tgt" "$symlink"
-fi
+# XXX
+sunset = '18:00'
+sunrise = '07:00'
 
-theme=$(plasma-apply-colorscheme --list-schemes |
-            awk 'match($0, /^ \* ([^ ]+) \(current color scheme\)/, ary) { print ary[1]; }')
-if [[ $want != "$theme" ]]; then
-    plasma-apply-colorscheme "$want" &> /dev/null
-    if [[ $scheme = dark ]]; then
-        icon_theme=breeze-dark
-    else
-        icon_theme=breeze
-    fi
-    /usr/lib/x86_64-linux-gnu/libexec/plasma-changeicons "$icon_theme"
-fi
+
+@click.command
+@click.argument('mode',
+                type=click.Choice('auto light dark'.split(),
+                                  case_sensitive=False),
+                default='auto')
+def main(mode):
+    """Switch between light or dark mode.  Defaults to auto."""
+    # Ensure any external commands output in Locale agnostic output.
+    os.environ['LANG'] = os.environ['LC_ALL'] = 'C'
+
+    requested_mode = None
+    match mode:
+        case 'auto':
+            if hhmm_today(sunrise) <= datetime.now() < hhmm_today(sunset):
+                requested_mode = ColorMode.LIGHT
+            else:
+                requested_mode = ColorMode.DARK
+        case 'light' | 'dark':
+            requested_mode = ColorMode[mode.upper()]
+        case _:
+            raise ValueError(f'Unknown mode selector {mode}')
+    set_mode(requested_mode)
+
+
+def set_mode(mode: ColorMode):
+    """Set light or dark mode."""
+    update_alacritty_theme(mode)
+    match mode:
+        case ColorMode.LIGHT:
+            plasma_apply_colorscheme('BreezeLight')
+            plasma_changeicons('breeze')
+        case ColorMode.DARK:
+            plasma_apply_colorscheme('BreezeDark')
+            plasma_changeicons('breeze-dark')
+        case unknown:
+            raise ValueError(f'Do not know what to do with {unknown}')
+
+
+# XXX Dead code, do I need this?
+def current_qt_theme() -> str:
+    """Get current QT Theme."""
+    buf = StringIO()
+    plasma_apply_colorscheme('--list-schemes', _out=buf)
+    output = buf.getvalue()
+    m = re.search(r'^ \* ([^ ]+) \(current color scheme\)',
+                  output,
+                  re.M)
+    if not m:
+        s = f'Bad output from plasma-apply-colorscheme (got {output[:30]}…)'
+        raise ValueError(s)
+    return m.group(1)
+
+
+def update_alacritty_theme(mode: ColorMode):
+    symlink = Path("~/.config/alacritty/current-theme.toml").expanduser()
+    alacritty_cfgdir = symlink.parent
+    target_base = Path(f'{mode.name.lower()}-theme.toml')
+    target = alacritty_cfgdir / target_base
+    prefix = 'Skipping alacritty support: '
+    if not alacritty_cfgdir.is_dir():
+        s = f"{prefix}directory {alacritty_cfgdir} does not exist"
+        click.echo(s, err=True)
+        return
+    if not target.exists():
+        s = f"{prefix}symlink target {target} does not exist"
+        click.echo(s, err=True)
+        return
+    resolved = symlink.resolve()
+    if not resolved.exists() or resolved != target.resolve():
+        symlink.unlink(missing_ok=True)
+        symlink.symlink_to(target)
+
+
+if __name__ == '__main__':
+    main()
