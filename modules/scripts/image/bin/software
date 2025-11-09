@@ -67,7 +67,7 @@ if ! . /etc/os-release 2>/dev/null; then
 fi
 
 do_upgrade() {
-    if [[ $ID = debian ]]; then
+    if [[ $ID =~ debian|ubuntu ]]; then
         msg 'Refreshing Apt lists and installing updates'
         # apt-get update refreshes the available package list.
         # apt-get upgrade installs updates that do NOT temporarily break dependencies nor REMOVE packages.
