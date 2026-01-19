@@ -14,9 +14,9 @@ else
 fi
 
 msg() {
-    $tput bold setaf 2
+    $tput bold setaf 2 || :
     printf '>>> %s\n' "$*"
-    $tput sgr0
+    $tput sgr0 || :
 }
 
 rundir() {
