@@ -1,0 +1,84 @@
+#!/usr/bin/env python3
+
+import json
+import asyncio
+import click
+from pathlib import Path
+from functools import wraps
+
+
+class MPVClient:
+    def __init__(self, socketpath: Path):
+        self.socketpath = socketpath
+        self._reader: asyncio.StreamReader | None = None
+        self._writer: asyncio.StreamWriter | None = None
+
+    async def connect(self):
+        self._reader, self._writer = await asyncio.open_unix_connection(
+            self.socketpath,
+        )
+
+    async def close(self):
+        if self._writer is not None:
+            self._writer.close()
+            await self._writer.wait_closed()
+        self._reader = self._writer = None
+
+    async def __aenter__(self):
+        await self.connect()
+        return self
+
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        await self.close()
+
+    async def message(self, obj, check_error=True):
+        if self._writer is None:
+            raise RuntimeError('No connection')
+        b = (json.dumps(obj) + '\n').encode('utf-8')
+        self._writer.write(b)
+        await self._writer.drain()
+        reply_s = await self._reader.readline()
+        reply_obj = json.loads(reply_s.decode('utf-8'))
+        if (
+                not isinstance(reply_obj, dict) or
+                reply_obj.get('error') != 'success'
+        ):
+            raise MPVClient.IPCReplyError(reply_obj)
+        return reply_obj
+
+    class IPCReplyError(RuntimeError):
+
+        def __init__(self, reply):
+            super().__init__('Bad MPV IPC Reply: {}'.format(reply))
+            self.reply = reply
+
+
+def coro(f):
+    """https://github.com/pallets/click/issues/85#issuecomment-503464628"""
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        return asyncio.run(f(*args, **kwargs))
+
+    return wrapper
+
+
+@click.command()
+@click.argument('filename', nargs=-1)
+@click.option('--socketpath',
+              type=click.Path(exists=True, dir_okay=False),
+              default=Path.home() / '.config/mpv/mpv.socket')
+@coro
+async def mpv_add(filename, socketpath):
+    async with MPVClient(socketpath) as c:
+        for f in filename:
+            await c.message({
+                'command': [
+                    'loadfile',
+                    f,
+                    'append-play',
+                ]
+            })
+
+
+if __name__ == '__main__':
+    mpv_add()
