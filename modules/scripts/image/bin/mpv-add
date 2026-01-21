@@ -32,6 +32,7 @@ class MPVClient:
         await self.close()
 
     async def message(self, obj, check_error=True):
+        # TODO send a request id and wait for the response with same id.
         if self._writer is None:
             raise RuntimeError('No connection')
         b = (json.dumps(obj) + '\n').encode('utf-8')
@@ -63,7 +64,10 @@ def coro(f):
 
 
 @click.command()
-@click.argument('filename', nargs=-1)
+@click.argument('filename',
+                nargs=-1,
+                type=click.Path(exists=True, resolve_path=True))
+# TODO validate path corresponds to a socket file.
 @click.option('--socketpath',
               type=click.Path(exists=True, dir_okay=False),
               default=Path.home() / '.config/mpv/mpv.socket')
