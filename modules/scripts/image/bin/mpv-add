@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import time
 import json
 import asyncio
 import click
@@ -8,10 +9,14 @@ from functools import wraps
 
 
 class MPVClient:
+
+    TIMEOUT_NS: int = 5 * 1000**3
+
     def __init__(self, socketpath: Path):
         self.socketpath = socketpath
         self._reader: asyncio.StreamReader | None = None
         self._writer: asyncio.StreamWriter | None = None
+        self._request_counter: int = 1
 
     async def connect(self):
         self._reader, self._writer = await asyncio.open_unix_connection(
@@ -31,24 +36,60 @@ class MPVClient:
     async def __aexit__(self, exc_type, exc_value, traceback):
         await self.close()
 
-    async def message(self, obj, check_error=True):
-        # TODO send a request id and wait for the response with same id.
-        if self._writer is None:
+    async def message(self, obj: dict) -> dict:
+        """Send a message and wait for a response.
+
+        A request_id is automatically generated and any pre-exising request_id
+        field is overwritten.  The returned dictionary has its request_id
+        removed.
+
+        This code checks for errors and may raise MPVClient.IPCReplyError.
+
+        On timeout (see MPVClient.TIMEOUT_NS), a MPVClient.IPCTimeoutError
+        is raised.
+
+        """
+        if self._writer is None or self._reader is None:
             raise RuntimeError('No connection')
-        b = (json.dumps(obj) + '\n').encode('utf-8')
+        obj_copy = dict(obj)
+        obj_copy['request_id'] = request_id = self._request_counter
+        self._request_counter += 1
+        b = (json.dumps(obj_copy) + '\n').encode('utf-8')
         self._writer.write(b)
         await self._writer.drain()
-        reply_s = await self._reader.readline()
-        reply_obj = json.loads(reply_s.decode('utf-8'))
-        if (
-                not isinstance(reply_obj, dict) or
-                reply_obj.get('error') != 'success'
-        ):
+
+        timeout = time.time_ns() + self.TIMEOUT_NS
+        while True:
+            current = time.time_ns()
+            if timeout < current:
+                # TODO math doesn't seem right here, though timeout works.
+                raise MPVClient.IPCTimeoutError(current - timeout)
+            try:
+                reply_s = await asyncio.wait_for(self._reader.readline(),
+                                                 timeout=.25)
+            except TimeoutError:
+                continue
+            reply_obj = json.loads(reply_s.decode('utf-8'))
+            if not isinstance(reply_obj, dict):
+                raise MPVClient.IPCReplyError(reply_obj)
+            if reply_obj.get('request_id') != request_id:
+                continue
+            break
+
+        if reply_obj.get('error') != 'success':
             raise MPVClient.IPCReplyError(reply_obj)
+        del reply_obj['request_id']
         return reply_obj
 
-    class IPCReplyError(RuntimeError):
+    class IPCError(RuntimeError):
+        pass
 
+    class IPCTimeoutError(IPCError):
+        def __init__(self, timeoutns):
+            super().__init__('IPC timed out after {} ns'.format(timeoutns))
+            self.timeoutns = timeoutns
+
+    class IPCReplyError(IPCError):
         def __init__(self, reply):
             super().__init__('Bad MPV IPC Reply: {}'.format(reply))
             self.reply = reply
