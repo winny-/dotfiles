@@ -1,0 +1,22 @@
+#!/usr/bin/env python3
+
+import sys
+from pathlib import Path
+import datetime
+import click
+import subprocess
+
+
+@click.command()
+def log():
+    stamp = datetime.datetime.now()
+    filename = Path.home() / f'log/{stamp:%F}.txt'
+    completion = subprocess.run(['ed', '--', filename])
+    ret = completion.returncode
+    if ret < 0:  # Killed by signal
+        ret = 1
+    sys.exit(ret)
+
+
+if __name__ == '__main__':
+    log()
