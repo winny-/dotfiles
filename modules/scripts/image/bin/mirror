@@ -10,8 +10,10 @@ from PIL import Image, ImageDraw, ImageFont
 def my_log(loglevel, component, message):
     print('[{}] {}: {}'.format(loglevel, component, message))
 
+
 @click.command()
-@click.option('--source', '-s', type=click.Path(exists=True), default='/dev/video0')
+@click.option('--source', '-s',
+              type=click.Path(exists=True), default='/dev/video0')
 def mirror(source):
     player = mpv.MPV(
         log_handler=my_log,
@@ -26,7 +28,7 @@ def mirror(source):
     player.profile = 'low-latency'
     player['untimed'] = True
 
-    flipped = False
+    hflipped = vflipped = False
 
     @player.on_key_press('esc')
     @player.on_key_press('q')
@@ -35,12 +37,14 @@ def mirror(source):
 
     @player.on_key_press('f')
     def flip_horiz():
-        nonlocal flipped
-        flipped = not flipped
+        nonlocal hflipped
+        hflipped = not hflipped
         player.command('vf', 'toggle', 'hflip')
 
     @player.on_key_press('F')
     def flip_vert():
+        nonlocal vflipped
+        vflipped = not vflipped
         player.command('vf', 'toggle', 'vflip')
 
     @player.on_key_press('s')
@@ -62,11 +66,12 @@ def mirror(source):
 
     while not player.core_idle:
         overlay = player.create_image_overlay()
-        right_img = Image.new('RGBA', (50, 50), (255, 255, 255, 0))
+        right_img = Image.new('RGBA', (260, 80), (255, 255, 255, 0))
         right_draw = ImageDraw.Draw(right_img)
-        right_draw.text((0, 0), 'R', font=font)
-        right_x = player.osd_width - right_img.width if flipped else 0
-        overlay.update(right_img, pos=(right_x, player.osd_height - right_img.height))
+        right_draw.text((0, 0), 'Bot. Right', font=font)
+        right_x = player.osd_width - right_img.width if hflipped else 0
+        right_y = 0 if vflipped else player.osd_height - right_img.height
+        overlay.update(right_img, pos=(right_x, right_y))
         time.sleep(0.5)
         overlay.remove()
 
