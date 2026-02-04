@@ -37,6 +37,13 @@ __prompt_command() {
         PS1+="(${VIRTUAL_ENV_PROMPT:-${VIRTUAL_ENV##*/}}) "
     fi
 
+    if [[ ${SSH_CONNECTION+set} ]]; then
+        if [[ $__use_color ]]; then
+            PS1+='\[\033[01;33m\]ssh '
+        else
+            PS1+='SSH '
+        fi
+    fi
 
     if [[ $__use_color ]]; then
 	if [[ ${EUID} == 0 ]] ; then
