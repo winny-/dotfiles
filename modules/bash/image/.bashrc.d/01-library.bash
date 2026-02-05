@@ -13,16 +13,18 @@ set_title() {
     esac
 }
 
-seconds_to_hms() {
+seconds_to_human() {
     local raw=$1
-    local hours
-    local minutes
-    local seconds
+    local days hours minutes seconds
+    (( days=raw/(60*60*24) ))
+    (( raw=raw%(60*60*24) ))
     (( hours=raw/(60*60) ))
     (( raw=raw%(60*60) ))
     (( minutes=raw/60 ))
     (( seconds=raw%60 ))
+
     local ret=''
+    (( days )) && ret+="${days}d"
     (( hours )) && ret+="${hours}h"
     (( minutes )) && ret+="${minutes}m"
     (( seconds )) && ret+="${seconds}s"

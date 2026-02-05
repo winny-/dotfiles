@@ -1,61 +1,8 @@
 # Based off of Gentoo's bashrc
 
-__noted_time=
-
-__prompt_command() {
-    local code=$?
-    PS1=""
-
-    case ${TERM} in
-        screen*)
-            PS1+='\[\ek\u@\h \w\e\\\]'
-            ;;
-        [aEkx]term*|rxvt*|gnome*|konsole*|interix|tmux*|alacritty)
-            PS1+='\[\e]0;\u@\h \w\a\]'
-            ;;
-        *)
-            ;;
-    esac
-
-    __noted_time=1
-    local end_time
-    # shellcheck disable=SC2154
-    ((end_time = EPOCHSECONDS - __start_time))
-    if (( end_time > 5 )); then
-        PS1+='('"$(seconds_to_hms "$end_time")"') '
-    fi
-
-    if (( code )); then
-        if [[ $__use_color ]]; then
-            PS1+='\[\e[1;31m\]'"$code"'\[\e[0m\] '
-        else
-            PS1+="$code "
-        fi
-    fi
-
-    if [[ ${VIRTUAL_ENV+set} ]]; then
-        PS1+="(${VIRTUAL_ENV_PROMPT:-${VIRTUAL_ENV##*/}}) "
-    fi
-
-    if [[ ${SSH_CONNECTION+set} ]]; then
-        if [[ $__use_color ]]; then
-            PS1+='\[\033[01;33m\]ssh '
-        else
-            PS1+='SSH '
-        fi
-    fi
-
-    if [[ $__use_color ]]; then
-	if [[ ${EUID} == 0 ]] ; then
-	    PS1+='\[\033[01;31m\]\h\[\033[01;34m\] \w \$\[\033[00m\] '
-	else
-	    PS1+='\[\033[01;32m\]\u@\h\[\033[01;34m\] \w \$\[\033[00m\] '
-	fi
-    else
-	# show root@ when we don't have colors
-	PS1+='\u@\h \w \$ '
-    fi
-}
+################################################################
+# Color detection
+################################################################
 
 # Set colorful PS1 only on colorful terminals.
 # dircolors --print-database uses its own built-in database
@@ -91,5 +38,94 @@ else
 	[aEkx]term*|rxvt*|gnome*|konsole*|screen|cons25|*color) __use_color=true;;
 	esac
 fi
+
+################################################################
+# Debug hook to set title and command's start time
+################################################################
+
+_debug_hook() {
+    if [[ ! $BASH_COMMAND =~ ^(_direnv_hook|__prompt_command) || $__noted_time ]]; then
+        __start_time=$EPOCHSECONDS
+        __noted_time=
+    fi
+
+    # Don't add garbage if stdout is redirected.
+    if [[ ! -t 1 ]]; then
+        return
+    fi
+
+    if [[ $BASH_COMMAND =~ ^(_direnv_hook|__prompt_command) ]]; then
+        return
+    fi
+
+    local _command
+    _command="${BASH_COMMAND//[^[:print:]]/}"
+    local _s
+    _s='\u@\h \w'
+    set_title "${_command} — ${_s@P}"
+}
+
+trap _debug_hook DEBUG
+
+################################################################
+# Prompt command
+################################################################
+
+__noted_time=
+
+__prompt_command() {
+    local code=$?
+    PS1=""
+
+    case ${TERM} in
+        screen*)
+            PS1+='\[\ek\u@\h \w\e\\\]'
+            ;;
+        [aEkx]term*|rxvt*|gnome*|konsole*|interix|tmux*|alacritty)
+            PS1+='\[\e]0;\u@\h \w\a\]'
+            ;;
+        *)
+            ;;
+    esac
+
+    __noted_time=1
+    local end_time
+    # shellcheck disable=SC2154
+    ((end_time = EPOCHSECONDS - __start_time))
+    if (( end_time > 5 )); then
+        PS1+='('"$(seconds_to_human "$end_time")"') '
+    fi
+
+    if (( code )); then
+        if [[ $__use_color ]]; then
+            PS1+='\[\e[1;31m\]'"$code"'\[\e[0m\] '
+        else
+            PS1+="$code "
+        fi
+    fi
+
+    if [[ ${VIRTUAL_ENV+set} ]]; then
+        PS1+="(${VIRTUAL_ENV_PROMPT:-${VIRTUAL_ENV##*/}}) "
+    fi
+
+    if [[ ${SSH_CONNECTION+set} ]]; then
+        if [[ $__use_color ]]; then
+            PS1+='\[\033[01;33m\]ssh '
+        else
+            PS1+='SSH '
+        fi
+    fi
+
+    if [[ $__use_color ]]; then
+	if [[ ${EUID} == 0 ]] ; then
+	    PS1+='\[\033[01;31m\]\h\[\033[01;34m\] \w \$\[\033[00m\] '
+	else
+	    PS1+='\[\033[01;32m\]\u@\h\[\033[01;34m\] \w \$\[\033[00m\] '
+	fi
+    else
+	# show root@ when we don't have colors
+	PS1+='\u@\h \w \$ '
+    fi
+}
 
 PROMPT_COMMAND=__prompt_command
