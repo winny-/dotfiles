@@ -131,6 +131,8 @@ __prompt_command() {
         PS1+='@\h '
     elif [[ $EUID != 0 && ! ${ANDROID_ROOT+set} ]]; then
         PS1+="@\h "
+    elif [[ $EUID == 0 ]]; then
+        PS1+='\h '
     fi
 
     PS1+="${blue}\w "
