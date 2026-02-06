@@ -88,6 +88,15 @@ __prompt_command() {
             ;;
     esac
 
+    local red='' yellow='' green='' blue='' reset=''
+    if [[ $__use_color == true ]]; then
+       red='\[\e[1;31m\]'
+       yellow='\[\033[01;33m\]'
+       reset='\[\e[0m\]'
+       green='\[\033[01;32m\]'
+       blue='\[\033[01;34m\]'
+    fi
+
     __noted_time=1
     local end_time
     # shellcheck disable=SC2154
@@ -97,11 +106,7 @@ __prompt_command() {
     fi
 
     if (( code )); then
-        if [[ $__use_color ]]; then
-            PS1+='\[\e[1;31m\]'"$code"'\[\e[0m\] '
-        else
-            PS1+="$code "
-        fi
+        PS1+="${red}${code}${reset} "
     fi
 
     if [[ ${VIRTUAL_ENV+set} ]]; then
@@ -109,22 +114,29 @@ __prompt_command() {
     fi
 
     if [[ ${SSH_CONNECTION+set} ]]; then
-        if [[ $__use_color ]]; then
-            PS1+='\[\033[01;33m\]ssh '
-        else
-            PS1+='SSH '
-        fi
+        PS1+="${yellow}ssh${reset} "
     fi
 
-    if [[ $__use_color ]]; then
-	if [[ ${EUID} == 0 ]] ; then
-	    PS1+='\[\033[01;31m\]\h\[\033[01;34m\] \w \$\[\033[00m\] '
-	else
-	    PS1+='\[\033[01;32m\]\u@\h\[\033[01;34m\] \w \$\[\033[00m\] '
-	fi
+    if [[ $EUID == 0 ]]; then
+        if [[ $__use_color ]]; then
+            PS1+="${red}"
+        else
+            PS1+='\u'
+        fi
+    elif [[ ! ${ANDROID_ROOT+set} ]]; then
+        PS1+="${green}\u"
+    fi
+
+    if [[ ! ${ANDROID_ROOT+set} ]]; then
+        PS1+="@\h "
+    fi
+
+    PS1+="${blue}\w "
+
+    if [[ $EUID == 0 ]]; then
+        PS1+="${red}\$${reset} "
     else
-	# show root@ when we don't have colors
-	PS1+='\u@\h \w \$ '
+        PS1+="${blue}\$${reset} "
     fi
 }
 
