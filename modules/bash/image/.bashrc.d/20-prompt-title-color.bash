@@ -118,7 +118,7 @@ __prompt_command() {
     fi
 
     if [[ $EUID == 0 ]]; then
-        if [[ $__use_color ]]; then
+        if [[ $__use_color == true ]]; then
             PS1+="${red}"
         else
             PS1+='\u'
@@ -127,7 +127,7 @@ __prompt_command() {
         PS1+="${green}\u"
     fi
 
-    if [[ $EUID == 0 && $__use_color == false ]]; then
+    if [[ $EUID == 0 && $__use_color != true ]]; then
         PS1+='@\h '
     elif [[ $EUID != 0 && ! ${ANDROID_ROOT+set} ]]; then
         PS1+="@\h "
