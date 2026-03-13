@@ -1,16 +1,47 @@
 #!/usr/bin/env python3
 
+import re
 import sys
+import os
 from pathlib import Path
 import datetime
 import click
 import subprocess
+
+try:
+    from setproctitle import setproctitle
+except ImportError:
+
+    def setproctitle(title: str) -> None:
+        pass
+
+
+def set_title(title: str) -> None:
+    term = os.getenv('TERM')
+    if not term:
+        return
+    match term:
+        case screen if screen.startswith('screen'):
+            print(f'\x1bk{title}\x1b\\', end='')
+            sys.stdout.flush()
+        case standard if re.match(
+                r'[aEkx]term|rxvt|gnome|konsole|interix|tmux|alarcitty',
+                standard
+        ):
+            print(f'\x1b]0;{title}\x07', end='')
+            sys.stdout.flush()
+        case _:
+            pass
 
 
 @click.command()
 def log():
     stamp = datetime.datetime.now()
     filename = Path.home() / f'log/{stamp:%F}.txt'
+    title = f'log {stamp:%F}'
+    setproctitle(title)
+    if os.isatty(sys.stdin.fileno()):
+        set_title(title)
     completion = subprocess.run(['ed', '--', filename])
     ret = completion.returncode
     if ret < 0:  # Killed by signal
