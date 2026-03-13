@@ -1,4 +1,6 @@
+_ignore_set_title=yes
 set_title() {
+    [[ $_ignore_set_title ]] && return
     case ${TERM} in
         [aEkx]term*|rxvt*|gnome*|konsole*|interix|tmux*|alacritty)
             printf '\e]0;%s\a' "$*"

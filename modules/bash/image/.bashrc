@@ -38,6 +38,9 @@ if [[ -f ~/.bashrc.local ]]; then
     . ~/.bashrc.local
 fi
 
+# Unleash set_title
+_ignore_set_title=
+
 # Non-zero exit codes appear in this module's Bash prompt; ergo ensure the very
 # last command in the .bashrc has a zero exit code.
 :
