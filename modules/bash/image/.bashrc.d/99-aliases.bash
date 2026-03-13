@@ -30,3 +30,6 @@ alias hw-probe='sudo -E hw-probe -all -upload -inventory LHW-ADDA-1F0A-C507-1BF1
 
 ### Literary
 alias d=wdict
+
+### Hard to remember™
+alias doom3=dhewm3
