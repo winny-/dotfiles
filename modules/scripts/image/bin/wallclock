@@ -1,0 +1,152 @@
+#!/usr/bin/env python
+
+import click
+import kivy
+kivy.require('2.3.1')
+
+
+from kivy.app import App
+from kivy.lang import Builder
+from kivy.clock import Clock
+from kivy.core.window import Window
+from kivy.graphics import Color, Rectangle
+import tzlocal
+from datetime import datetime
+
+
+KV = r"""
+FloatLayout:
+    Label:
+        id: clock_label
+        text: '[i]loading ...[/i]'
+        halign: 'center'
+        valign: 'middle'
+        markup: True
+        text_size: self.size
+        # on_size: app.fit_text(self)
+        size_hint: 0.5, 0.5
+        # size: self.texture_size
+        pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+    Label:
+        id: tz_label
+        text: 'tz goes here'
+        color: 'purple'
+        size_hint: 1, 1
+        text_size: self.size
+        # size: self.texture_size
+        halign: 'right'
+        valign: 'bottom'
+        pos_hint: {"right": 1, "y": 0}
+"""
+
+
+class ClockApp(App):
+    kiloseconds = True
+    light = True
+    tenths_of_seconds = True
+
+    def build(self):
+        self.root = Builder.load_string(KV)
+        with self.root.canvas.before:
+            self.bg_color = Color(1, 1, 1, 1)
+            self.bg_rect = Rectangle(pos=self.root.pos, size=self.root.size)
+        self.root.bind(pos=self.update_bg, size=self.update_bg)
+        self.allow_screensaver = False
+        return self.root
+
+    def update_bg(self, *args):
+        self.bg_rect.pos = self.root.pos
+        self.bg_rect.size = self.root.size
+
+    def on_key_down(self, window, key, scancode, codepoint, modifiers):
+        match codepoint:
+            case 'k':
+                self.kiloseconds = not self.kiloseconds
+                return True
+            case 'l' | 'd':
+                self.light = not self.light
+                return True
+            case 's':
+                self.tenths_of_seconds = not self.tenths_of_seconds
+                return True
+            case 'f':
+                fullscreen = window.borderless = not window.borderless
+                window.fullscreen = fullscreen and 'auto'
+                return True
+            case 'q':
+                self.stop()
+                return True
+
+    def on_touch_down(self, window, touch):
+        # Left side of the window
+        if touch.pos[0] < window.size[0] // 2:
+            # Top left
+            if touch.pos[1] < window.size[1] // 2:
+                self.kiloseconds = not self.kiloseconds
+                return True
+            # Bottom left
+            else:
+                self.tenths_of_seconds = not self.tenths_of_seconds
+                return True
+        # Right side of window
+        else:
+            self.light = not self.light
+            return True
+
+    def on_start(self):
+        Window.bind(on_key_down=self.on_key_down)
+        Window.bind(on_touch_down=self.on_touch_down)
+        Clock.schedule_interval(self.tick, 1/60)
+
+    def tick(self, dt):
+        if self.light:
+            self.root.ids.clock_label.color = (0, 0, 0, 1)
+            self.bg_color.rgba = (1, 1, 1, 1)
+        else:
+            self.root.ids.clock_label.color = (1, 1, 1, 1)
+            self.bg_color.rgba = (0, 0, 0, 1)
+        t = datetime.now()
+        if self.kiloseconds:
+            today = t.replace(hour=0, minute=0, second=0, microsecond=0)
+            delta = t - today
+            seconds = delta.seconds + delta.microseconds / 1000**2
+            if self.tenths_of_seconds:
+                text = f'{seconds:06,.01f}'
+            else:
+                text = f'{seconds:04,.00f}'
+            text += f'[i][size=32]/{24*60*60:,d}[/size][/i]'
+        else:
+            seconds = t.second + t.microsecond / 1000**2
+            whole_secs, fractional_secs = f'{seconds:04.1f}'.split('.', 1)
+            text = f'{t:%H:%M}:{whole_secs}'
+            if self.tenths_of_seconds:
+                text += f'[size=96].{fractional_secs}[/size]'
+        self.root.ids.clock_label.text = text
+        self.root.ids.tz_label.text = f'{t:%a %F} {tzlocal.get_localzone_name()}'
+        # XXX
+        # Clock.schedule_once(self.fit_text, 0)
+
+    # XXX doesn't appear to work with float layout
+    def fit_text(self, dt):
+        breakpoint()
+        label = self.root.ids.clock_label
+
+        label.font_size = 100
+        label.texture_update()
+
+        texture_width = label.texture_size[0]
+        widget_width = label.width
+
+        if texture_width > 0:
+            scale = widget_width / texture_width
+            label.font_size *= scale
+
+
+@click.command()
+def main():
+    """Display winny's clock"""
+    ClockApp().run()
+
+
+if __name__ == '__main__':
+    main()

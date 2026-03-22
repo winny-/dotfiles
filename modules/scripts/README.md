@@ -141,3 +141,9 @@ systemctl enable lightdark.timer
 ### Dependencies
 
 Perl 5.
+
+## `wallclock` - kilosecond and digital time wallclock
+
+### Dependencies
+
+Python 3 and the following Python3 packages: kivy, click, tzlocal.
