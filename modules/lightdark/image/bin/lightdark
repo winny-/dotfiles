@@ -19,6 +19,10 @@ from pathlib import Path
 from io import StringIO
 import enum
 from suntime import Sun
+import logging
+
+
+logger = logging.getLogger('lightdark')
 
 
 plasma_apply_colorscheme = sh.Command('plasma-apply-colorscheme')
@@ -44,20 +48,25 @@ def hhmm_today(hhmm: str) -> datetime:
 @click.command
 @click.option('--dump-config', '-d', is_flag=True, default=False,
               help='Dump configuration and exit.')
+@click.option('--verbose', '-v', is_flag=True, default=False,
+              help='Enable logging.')
 @click.argument('mode',
                 type=click.Choice('auto light dark'.split(),
                                   case_sensitive=False),
                 default='auto')
-def main(dump_config, mode):
+def main(dump_config, verbose, mode):
     """Switch between light or dark mode.  Defaults to auto."""
+    logging.basicConfig(
+        level=logging.INFO if verbose else logging.ERROR,
+    )
     # Ensure any external commands output in Locale agnostic output.
     os.environ['LANG'] = os.environ['LC_ALL'] = 'C'
-    config_path = (
-        Path(BaseDirectory.save_config_path('lightdark'))
-        / 'config.toml'
-    )
+    config_path = (Path(BaseDirectory.save_config_path('lightdark'))
+                   / 'config.toml')
+    logger.info(f'Reading configuration {config_path} ...')
     with open(config_path, 'rb') as f:
         cfg = tomllib.load(f)
+
     requested_mode = None
     loc_cfg = cfg['location']
     long, lat = float(loc_cfg['long']), float(loc_cfg['lat'])
@@ -67,6 +76,11 @@ def main(dump_config, mode):
     # These lines probably will need updating soon...
     sunrise = sun.get_local_sunrise_time(local_time_zone=local_tz)
     sunset = sun.get_local_sunset_time(local_time_zone=local_tz)
+    if sunset.day != sunrise.day:
+        # I don't understand why but the day sometimes deviates from
+        # today's date.
+        sunset = sunset.replace(day=now.day)
+        sunrise = sunrise.replace(day=now.day)
     match mode:
         case 'auto':
             if sunrise <= now < sunset:
@@ -90,6 +104,7 @@ def main(dump_config, mode):
 def set_mode(mode: ColorMode):
     """Set light or dark mode."""
     update_alacritty_theme(mode)
+    logger.info(f'set_mode({mode})')
     match mode:
         case ColorMode.LIGHT:
             plasma_apply_colorscheme('BreezeLight')
@@ -132,8 +147,11 @@ def update_alacritty_theme(mode: ColorMode):
         return
     resolved = symlink.resolve()
     if not resolved.exists() or resolved != target.resolve():
+        logger.info('Updating alacritty symlink.')
         symlink.unlink(missing_ok=True)
         symlink.symlink_to(target)
+    else:
+        logger.info('Alacritty is configured already.')
 
 
 if __name__ == '__main__':
