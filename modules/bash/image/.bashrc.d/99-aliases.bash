@@ -17,6 +17,7 @@ alias g=git
 alias t=tmux
 
 ### Operator
+alias s=sudo
 alias sys=systemctl
 alias sysu='sys --user'
 alias j=journalctl
