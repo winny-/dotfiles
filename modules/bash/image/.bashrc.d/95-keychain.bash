@@ -14,7 +14,7 @@ if command -v keychain &> /dev/null; then
     [[ -r ${HOME}/.keychain/${HOSTNAME}-sh-gpg ]] && . "${HOME}/.keychain/${HOSTNAME}-sh-gpg"
 
     # shellcheck disable=SC2086
-    eval "$(keychain --eval -q --inherit any --agents ssh,gpg ${keys//\~/$HOME})"
+    eval "$(keychain --eval -q --ssh-allow-forwarded ${keys//\~/$HOME})"
 
     unset keys
     unset file
